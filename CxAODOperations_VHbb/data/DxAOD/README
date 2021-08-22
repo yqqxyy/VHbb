@@ -1,0 +1,9 @@
+VHbb - the new derivations (21.2.42.0) for end of Run-2 using 2018 data
+but the MET trigger preselection was not good, affecting 0L and 1L mostly data and a little bit also MC
+
+VHbb2 - the same release as VHbb, with with MET trigger fix, 21.2.42.0+postExec - on 08 Dec 2018 from Goetz
+only a few test files but with the same naming convention as in an official production, and full stats
+mc16_13TeV:mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D1.e6337_e5984_a875_r10724_r10726_p3717_tid16354390_00
+mc16_13TeV:mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D2.e6337_e5984_a875_r10724_r10726_p3717_tid16354383_00
+data18_13TeV:data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG5D2.f1002_m2037_p3718_tid16354399_00
+data18_13TeV:data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG5D1.f1002_m2037_p3718_tid16354404_00

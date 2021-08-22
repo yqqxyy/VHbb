@@ -1,0 +1,18 @@
+// Dear emacs, this is -*-c++-*-
+
+template <class handlerType>
+handlerType* AnalysisBase::registerHandler(std::string name) {
+  std::string containerName;
+  m_config->getif<std::string>(name + "Container", containerName);
+  if( containerName.empty() ) {
+    Warning("registerHandler()", ("Container for handler '" + name +
+            "' not defined! Handler not registered.").c_str());
+    return nullptr;
+  }
+  handlerType* handler = new handlerType(name, *m_config, m_event, *m_eventInfoHandler);
+  handler->setLinker(&m_linker);
+  m_objectHandler.push_back( handler );
+  Info("registerHandler()", ("Handler '" + name + "' registered.").c_str());
+  return handler;
+}
+

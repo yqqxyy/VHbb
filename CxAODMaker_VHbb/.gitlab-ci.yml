@@ -1,0 +1,349 @@
+# Credit-/Thanks:
+# Lukas Heinrich for RECAST (https://hub.docker.com/r/lukasheinrich/recast_cvmfs_assisted/tags)
+# Giordon Stark for discussions about YAML and CI
+# Adrian Buzatu and Matthew Feickert developed and maintained this file on behalf of the CxAODFramework team
+
+image: lukasheinrich/recast_cvmfs_assisted:20161231
+
+variables:
+  JOB_DIR: "${CI_PROJECT_NAME}_TestArea"
+  JOB_DIR_ABS: "${CI_PROJECT_DIR}/${CI_PROJECT_NAME}_TestArea" # CI_PROJECT_DIR is set by Runner
+  DATA_PATH: /afs/cern.ch/work/v/vhbbframework/public/data/DxAOD
+
+before_script:
+  - echo "Start before script"
+  - echo "CI_PROJECT_NAME=${CI_PROJECT_NAME}"
+  - echo "JOB_DIR=${JOB_DIR}"
+  - echo "JOB_DIR_ABS=${JOB_DIR_ABS}"
+  - pwd
+  - ls -l /
+  - ls -l /cvmfs/atlas.cern.ch/repo/
+  - ls -l /cvmfs/atlas.cern.ch/
+  - source ~/.bashrc || echo ignore alrb
+  - echo "${SERVICE_PASS}" | kinit ${CERN_USER}@CERN.CH
+  - klist
+  # Install ssh-agent if not already installed, it is required by Docker.
+  # (change apt-get to yum if you use a CentOS-based image)
+  - "which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )"
+
+  # Run ssh-agent (inside the build environment)
+  - eval $(ssh-agent -s)
+
+  # Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  - mkdir -p ~/.ssh
+
+  # For Docker builds disable host key checking. Be aware that by adding that
+  # you are suspectible to man-in-the-middle attacks.
+  - echo -e "Host svn.cern.ch lxplus.cern.ch gitlab.cern.ch\n\tUser ${CERN_USER}\n\tStrictHostKeyChecking no\n\tGSSAPIAuthentication yes\n\tGSSAPIDelegateCredentials yes\n\tProtocol 2\n\tForwardX11 no\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+  #
+  - mkdir -p $JOB_DIR_ABS
+  - cd $JOB_DIR_ABS
+  # - yum install blas -y
+
+stages:
+  - Build
+  - Check for compiler warnings
+  - Run
+
+# c.f. https://blog.bitexpert.de/blog/running-matrix-builds-with-gitlab-ci/
+build:
+  stage: Build
+  retry: 2
+  tags:
+    - cvmfs
+  script:
+    - set -e # exit on fail
+    - echo -e "\n###############################\n###~Let's build ${CI_PROJECT_NAME}!~###\n###############################\n"
+    - pwd
+    - ls -lha
+    - mkdir source build run run/logs run/configs
+    - cd source
+    - git clone ssh://git@gitlab.cern.ch:7999/CxAODFramework/CxAODBootstrap_VHbb.git #ssh
+    - cd CxAODBootstrap_VHbb
+    - git checkout origin/master -b master-${USER}
+    - cd ..
+    - pwd
+    - ls -l
+    - less CxAODBootstrap_VHbb/bootstrap/packages_VHbb_git.txt
+    - set +e
+    - USER="${CERN_USER}" source CxAODBootstrap_VHbb/bootstrap/setup.sh master branch
+    - set -e
+    - pwd; ls -l
+    - echo "Go to package ${CI_PROJECT_NAME}"
+    - cd ${CI_PROJECT_NAME} # my CxAOD package
+    - pwd; ls -l
+    - echo "Checkout branch ${CI_COMMIT_REF_NAME} to test the new commits"
+    - echo "In the pipeline triggered by the merge or by a tag, the first command below will fail with a message about fatal, but do not worry, as it is not fatal. Instead it will run the second command, the part after || and that one will work. The reason is that when we merge, the branch already exists with -${USER} in it, so we can not create it again with -b, so we simply have to check it out."  
+    - git checkout origin/${CI_COMMIT_REF_NAME} -b ${CI_COMMIT_REF_NAME}-${USER} || git checkout ${CI_COMMIT_REF_NAME}-${USER} # the test branch of interest
+    - ls -lha data
+    - cd ..
+    - pwd; ls -l
+    - echo "Start the building stage"
+    - cd ../build
+    - setupATLAS || echo ignore alrb
+    - lsetup asetup || echo ignore alrb
+    - release=`cat ../source/CxAODBootstrap_VHbb/bootstrap/release.txt`
+    - echo "release=$release"
+    - asetup AnalysisBase,$release,here || echo ignore alrb
+    - cp CMakeLists.txt ../source
+    - ls -l
+    - cmake ../source
+    - cmake --build . 2>&1 | tee build.log
+    - pwd
+    - ls -lha
+    - pwd
+    - ls -lha
+    - source x86_64-slc6-gcc62-opt/setup.sh
+    #- source "$(find . -iname "setup.sh")"
+  only:
+    # Only execute on branches that start with "master"
+    - /^master.*$/
+  artifacts:
+    paths:
+      - ${JOB_DIR_ABS}/source/
+      - ${JOB_DIR_ABS}/build/
+      - ${JOB_DIR_ABS}/run/
+    name: "${JOB_DIR}_${CI_JOB_STAGE}"
+    expire_in: 3 days
+
+check_for_compiler_warnings:
+  stage: Check for compiler warnings
+  dependencies:
+    - build
+  script:
+    - ${JOB_DIR_ABS}/source/CxAODMaker/scripts/hasCompilerWarnings.sh ${JOB_DIR_ABS}/build/build.log
+    - exit $?
+  allow_failure: true
+
+.template: &run_job
+  stage: Run
+  tags:
+    - cvmfs
+  dependencies:
+    - build
+  script:
+    # some hard coded variables that usually don't change
+    # putting them into a `variable` field in the template would get overwritten
+    - STEM="none"
+    - VTAG="none"
+    - GRID="Higgs"
+    - USE_TCC="0"
+    - DO="1"
+    - LOG_FILE="none"
+    # prepare the run environment
+    - cd ${JOB_DIR_ABS}/build
+    - asetup --restore || echo ignore alrb
+    - source x86_64-slc6-gcc62-opt/setup.sh
+    # copy the DAOD and set the LOCAL_SAMPLE name
+    - cd ${JOB_DIR_ABS}
+    - mkdir data
+    - cd data
+    - COMMAND="scp -r vhbbframework@lxplus.cern.ch:${DATA_PATH}/${SAMPLE_LONG} ."
+    - echo ${COMMAND}
+    - eval ${COMMAND}
+    - cd ${JOB_DIR_ABS}/run
+    - LOCAL_SAMPLE="${JOB_DIR_ABS}/data/$(basename ${SAMPLE_LONG})"
+    # prepare the SUBMITDIR variable
+    - SUBMITDIR="${JOB_DIR_ABS}/run/${SAMPLE_SHORT}"
+    # echo configuration
+    - echo "CHANNEL=${CHANNEL}"
+    - echo "PERIOD=${PERIOD}"
+    - echo "DERIV=${DERIV}"
+    - echo "STEM=${STEM}"
+    - echo "VTAG=${VTAG}"
+    - echo "GRID=${GRID}"
+    - echo "USE_TCC=${USE_TCC}"
+    - echo "NR_EVENTS=${NR_EVENTS}"
+    - echo "LOCAL_SAMPLE=${LOCAL_SAMPLE}"
+    - echo "LOG_FILE=${LOG_FILE}"
+    - echo "DO=${DO}"
+    # define the command and echo it
+    - COMMAND="source ../source/CxAODOperations_VHbb/scripts/submitMaker.sh ${CHANNEL} ${PERIOD} ${DERIV} ${STEM} ${VTAG} ${GRID} ${USE_TCC} ${NR_EVENTS} ${LOCAL_SAMPLE} ${LOG_FILE} ${DO}"
+    - echo ${COMMAND}
+    # run the command
+    - eval ${COMMAND}
+  artifacts:
+    paths:
+      - ${JOB_DIR_ABS}/run
+    expire_in: 7 days
+
+0L_data16:
+  variables:
+    SAMPLE_SHORT: "0L_data16"
+    CHANNEL: "0L"
+    PERIOD: "a"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data16_13TeV.00311321.physics_Main.deriv.DAOD_HIGG5D1.r9264_p3083_p3640"
+  <<: *run_job
+
+0L_mc16a_ZHvvbb:
+  variables:
+    SAMPLE_SHORT: "0L_mc16a_ZHvvbb"
+    CHANNEL: "0L"
+    PERIOD: "a"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345056.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_vvbb_VpT.deriv.DAOD_HIGG5D1.e5706_e5984_s3126_r9364_r9315_p3641"
+  <<: *run_job
+
+0L_data17:
+  variables:
+    SAMPLE_SHORT: "0L_data17"
+    CHANNEL: "0L"
+    PERIOD: "d"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data17_13TeV.00327761.physics_Main.deriv.DAOD_HIGG5D1.r10203_p3399_p3640"
+  <<: *run_job
+
+0L_mc16d_ZHvvbb:
+  variables:
+    SAMPLE_SHORT: "0L_mc16d_ZHvvbb"
+    CHANNEL: "0L"
+    PERIOD: "d"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345056.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_vvbb_VpT.deriv.DAOD_HIGG5D1.e5706_e5984_s3126_r10201_r10210_p3641"
+  <<: *run_job
+
+0L_data18:
+  variables:
+    SAMPLE_SHORT: "0L_data18"
+    CHANNEL: "0L"
+    PERIOD: "e"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG5D1.f1002_m2037_p3718"
+  <<: *run_job
+
+0L_mc16e_ZHvvbb:
+  variables:
+    SAMPLE_SHORT: "0L_mc16e_ZHvvbb"
+    CHANNEL: "0L"
+    PERIOD: "e"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345056.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_vvbb_VpT.deriv.DAOD_HIGG5D1.e5706_s3126_r10724_p3717"
+  <<: *run_job
+
+1L_data16:
+  variables:
+    SAMPLE_SHORT: "1L_data16"
+    CHANNEL: "1L"
+    PERIOD: "a"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data16_13TeV.00311321.physics_Main.deriv.DAOD_HIGG5D2.r9264_p3083_p3640"
+  <<: *run_job
+
+1L_mc16a_WHlvbb:
+  variables:
+    SAMPLE_SHORT: "1L_mc16a_WHlvbb"
+    CHANNEL: "1L"
+    PERIOD: "a"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345053.PowhegPythia8EvtGen_NNPDF3_AZNLO_WmH125J_MINLO_lvbb_VpT.deriv.DAOD_HIGG5D2.e5706_e5984_s3126_r9364_r9315_p3641"
+  <<: *run_job
+
+1L_data17:
+  variables:
+    SAMPLE_SHORT: "1L_data17"
+    CHANNEL: "1L"
+    PERIOD: "d"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data17_13TeV.00327761.physics_Main.deriv.DAOD_HIGG5D2.r10203_p3399_p3640"
+  <<: *run_job
+
+1L_mc16d_WHlvbb:
+  variables:
+    SAMPLE_SHORT: "1L_mc16d_WHlvbb"
+    CHANNEL: "1L"
+    PERIOD: "d"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345053.PowhegPythia8EvtGen_NNPDF3_AZNLO_WmH125J_MINLO_lvbb_VpT.deriv.DAOD_HIGG5D2.e5706_e5984_s3126_r10201_r10210_p3641"
+  <<: *run_job
+
+1L_data18:
+  variables:
+    SAMPLE_SHORT: "1L_data18"
+    CHANNEL: "1L"
+    PERIOD: "e"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG5D2.f1002_m2037_p3718"
+  <<: *run_job
+
+1L_mc16e_WHlvbb:
+  variables:
+    SAMPLE_SHORT: "1L_mc16e_WHlvbb"
+    CHANNEL: "1L"
+    PERIOD: "e"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345053.PowhegPythia8EvtGen_NNPDF3_AZNLO_WmH125J_MINLO_lvbb_VpT.deriv.DAOD_HIGG5D2.e5706_s3126_r10724_p3717"
+  <<: *run_job
+
+2L_data16:
+  variables:
+    SAMPLE_SHORT: "2L_data16"
+    CHANNEL: "2L"
+    PERIOD: "a"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data16_13TeV.00311321.physics_Main.deriv.DAOD_HIGG2D4.r9264_p3083_p3640"
+  <<: *run_job
+
+2L_mc16a_ZHllbb:
+  variables:
+    SAMPLE_SHORT: "2L_mc16a_ZHllbb"
+    CHANNEL: "2L"
+    PERIOD: "a"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345055.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_llbb_VpT.deriv.DAOD_HIGG2D4.e5706_e5984_s3126_r9364_r9315_p3641"
+  <<: *run_job
+
+2L_data17:
+  variables:
+    SAMPLE_SHORT: "2L_data17"
+    CHANNEL: "2L"
+    PERIOD: "d"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data17_13TeV.00327761.physics_Main.deriv.DAOD_HIGG2D4.r10203_p3399_p3640"
+  <<: *run_job
+
+2L_mc16d_ZHllbb:
+  variables:
+    SAMPLE_SHORT: "2L_mc16d_ZHllbb"
+    CHANNEL: "2L"
+    PERIOD: "d"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345055.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_llbb_VpT.deriv.DAOD_HIGG2D4.e5706_e5984_s3126_r10201_r10210_p3641"
+  <<: *run_job
+
+2L_data18:
+  variables:
+    SAMPLE_SHORT: "2L_data18"
+    CHANNEL: "2L"
+    PERIOD: "e"
+    DERIV: "VHbb"
+    NR_EVENTS: "1000"
+    SAMPLE_LONG: "VHbb/data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG2D4.f1002_m2037_p3640"
+  <<: *run_job
+
+2L_mc16e_ZHllbb:
+  variables:
+    SAMPLE_SHORT: "2L_mc16e_ZHllbb"
+    CHANNEL: "2L"
+    PERIOD: "e"
+    DERIV: "VHbb"
+    NR_EVENTS: "200"
+    SAMPLE_LONG: "VHbb/mc16_13TeV.345055.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_llbb_VpT.deriv.DAOD_HIGG2D4.e5706_e5984_s3126_r10724_r10726_p3641"
+  <<: *run_job

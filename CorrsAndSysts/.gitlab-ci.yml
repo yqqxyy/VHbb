@@ -1,0 +1,722 @@
+# Credit-/Thanks:
+# Lukas Heinrich for RECAST (https://hub.docker.com/r/lukasheinrich/recast_cvmfs_assisted/tags)
+# Giordon Stark for discussions about YAML and CI
+# Adrian Buzatu and Matthew Feickert developed and maintained this file on behalf of the CxAODFramework team
+# Andreas Hoenle for the validation stages, developed and maintained this file on behalf of the CxAODFramework team
+
+# if you are using custom /afs location give the bot the required access
+# (d)elete, (i)insert, (l)ist, (r)ead, (w)rite
+# fs sa /afs/cern.ch/your/directory vhbbframework dilrw
+variables:
+ JOB_DIR: "${CI_PROJECT_NAME}_TestArea"
+ JOB_DIR_ABS: "${CI_PROJECT_DIR}/${CI_PROJECT_NAME}_TestArea" # CI_PROJECT_DIR is set by Runner
+ PATH_DATA: /afs/cern.ch/work/v/vhbbframework/public/data
+ BIN_DIR: /afs/cern.ch/work/v/vhbbframework/public/bin  # where the latest build is stored
+
+before_script:
+ - echo "Start before script"
+ - echo "CI_PROJECT_NAME=${CI_PROJECT_NAME}"
+ - echo "JOB_DIR=${JOB_DIR}"
+ - echo "JOB_DIR_ABS=${JOB_DIR_ABS}"
+ - pwd
+ - ls -l /
+ - ls -l /cvmfs/atlas.cern.ch/repo/
+ - ls -l /cvmfs/atlas.cern.ch/
+ - source ~/.bashrc || echo ignore alrb
+ - echo "${SERVICE_PASS}" | kinit ${CERN_USER}@CERN.CH
+ - klist
+ # Install ssh-agent if not already installed, it is required by Docker.
+ # (change apt-get to yum if you use a CentOS-based image)
+ - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+
+ # Run ssh-agent (inside the build environment)
+ - eval $(ssh-agent -s)
+
+ # Add the SSH key stored in SSH_PRIVATE_KEY variable to the agent store
+ - ssh-add <(echo "$SSH_PRIVATE_KEY")
+ - mkdir -p ~/.ssh
+
+ # For Docker builds disable host key checking. Be aware that by adding that
+ # you are suspectible to man-in-the-middle attacks.
+ - echo -e "Host svn.cern.ch lxplus.cern.ch gitlab.cern.ch\n\tUser ${CERN_USER}\n\tStrictHostKeyChecking no\n\tGSSAPIAuthentication yes\n\tGSSAPIDelegateCredentials yes\n\tProtocol 2\n\tForwardX11 no\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+ #
+ - mkdir -p $JOB_DIR_ABS
+ - cd $JOB_DIR_ABS
+
+stages:
+ - Coding style
+ - Build CxAODFramework
+ - Check for compiler warnings
+ - Prepare directories
+ - Prepare configs
+ - Run Reader
+
+.template: &clang-format
+  except:
+    - master  # we *never* commit directly to master
+    - tags    # cannot commit to tags - clang format would always fail
+  image: ahoenle/atlas-clang-format:latest
+  stage: Coding style
+  before_script:
+    # override global before_script
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - mkdir -p ~/.ssh
+    - echo -e "Host svn.cern.ch lxplus.cern.ch gitlab.cern.ch\n\tUser ${CERN_USER}\n\tStrictHostKeyChecking no\n\tGSSAPIAuthentication yes\n\tGSSAPIDelegateCredentials yes\n\tProtocol 2\n\tForwardX11 no\n\tIdentityFile ~/.ssh/id_rsa" >> ~/.ssh/config
+    - mkdir -p $JOB_DIR_ABS
+    - cd $JOB_DIR_ABS
+    - git config --global user.name "vhbbframework-CI-bot"
+    - git config --global user.email "gitlab@cern.ch"
+  script:
+    - cd ${JOB_DIR_ABS}
+    - pwd
+    - git clone ssh://git@gitlab.cern.ch:7999/CxAODFramework/${CI_PROJECT_NAME}.git
+    - cd ${CI_PROJECT_NAME}
+    - git checkout origin/${CI_COMMIT_REF_NAME} -b ${CI_COMMIT_REF_NAME}  # we will push the changes to the same branch
+    # these scripts come with the ahoenle/atlas-clang-format container
+    - /scripts/clang-format-files ${files}  # formats specific files
+    - /scripts/clang-format-dirs ${dirs}    # formats all .h, .cxx, .icc files in given dirs
+    - git diff
+    # determine if there are changes, exit with 0 if there are not
+    - git diff-index --quiet HEAD -- && exit 0
+    # if we arrive here there are changes -> commit them
+    - git commit -a -m 'clang-format by gitlab-CI'
+    - git push -u origin ${CI_COMMIT_REF_NAME}
+    - exit 1  # fail this pipeline if there were changes to trigger a new pipeline
+
+# c.f. https://blog.bitexpert.de/blog/running-matrix-builds-with-gitlab-ci/
+.template: &r21_build
+    image: lukasheinrich/recast_cvmfs_assisted:20161231
+    stage: Build CxAODFramework
+    tags:
+    - cvmfs
+    script:
+    - set -e # exit on fail
+    - echo -e "\n###############################\n###~Let's build ${CI_PROJECT_NAME}!~###\n###############################\n"
+    - pwd
+    - ls -lha
+    - mkdir source build run
+    - cd source
+    - git clone ssh://git@gitlab.cern.ch:7999/CxAODFramework/CxAODBootstrap_VHbb.git #ssh
+    - cd CxAODBootstrap_VHbb
+    - git checkout origin/master -b master-${USER}
+    - cd ..
+    - pwd
+    - ls -l
+    - less CxAODBootstrap_VHbb/bootstrap/packages_VHbb_git.txt
+    - set +e
+    - USER="${CERN_USER}" source CxAODBootstrap_VHbb/bootstrap/setup.sh master branch
+    - set -e
+    - pwd; ls -l
+    - echo "Go to package ${CI_PROJECT_NAME}"
+    - cd ${CI_PROJECT_NAME} # my CxAOD package
+    - pwd; ls -l
+    - echo "Checkout branch ${CI_COMMIT_REF_NAME} to test the new commits"
+    - git checkout origin/${CI_COMMIT_REF_NAME} -b ${CI_COMMIT_REF_NAME}-${USER} # the test branch of interest
+    - ls -lha data
+    - cd ..
+    - pwd; ls -l
+    - ssh ${CERN_USER}@lxplus.cern.ch "mkdir -p ${BIN_DIR}"
+    - rsync -a --exclude=".*" --exclude=".*/" ${JOB_DIR_ABS}/source ${CERN_USER}@lxplus.cern.ch:${BIN_DIR}
+    - echo "Start the building stage"
+    - cd ../build
+    - setupATLAS || echo ignore alrb
+    - lsetup asetup || echo ignore alrb
+    - release=`cat ../source/CxAODBootstrap_VHbb/bootstrap/release.txt`
+    - echo "release=$release"
+    - asetup AnalysisBase,$release,here || echo ignore alrb
+    - cp CMakeLists.txt ../source
+    - ls -l
+    - cmake ../source
+    - cmake --build .
+    - pwd
+    - ls -lha
+    - pwd
+    - ls -lha
+    - source x86_64-slc6-gcc62-opt/setup.sh
+    #- source "$(find . -iname "setup.sh")"
+    - rsync -a --exclude=".*" --exclude=".*/" ${JOB_DIR_ABS}/build ${CERN_USER}@lxplus.cern.ch:${BIN_DIR}
+    - rsync -a --exclude=".*" --exclude=".*/" ${JOB_DIR_ABS}/run ${CERN_USER}@lxplus.cern.ch:${BIN_DIR}
+    only:
+    # Only execute on branches that start with "master"
+      - /^master.*$/
+    except:
+      variables:
+        # [nobuild] is part of the commit message, added with gitlab 11
+        - $CI_COMMIT_MESSAGE =~ /\[nobuild\]/
+
+build:
+    <<: *r21_build
+
+    artifacts:
+        paths:
+            - ${JOB_DIR_ABS}/source/
+            - ${JOB_DIR_ABS}/build/
+            - ${JOB_DIR_ABS}/run/
+        name: "${JOB_DIR}_${CI_JOB_STAGE}"
+        expire_in: 7d
+
+clang-format:
+  variables: {
+    dirs: 'CorrsAndSysts Root'  # clang-format headers and source files
+  }
+  <<: *clang-format
+
+check_for_compiler_warnings:
+  stage: Check for compiler warnings
+  dependencies:
+    - build
+  script:
+    - ${JOB_DIR_ABS}/source/CxAODMaker/scripts/hasCompilerWarnings.sh ${JOB_DIR_ABS}/build/build.log
+    - exit $?
+  allow_failure: true
+
+prepare:
+ image: lukasheinrich/recast_cvmfs_assisted:20161231
+ stage: Prepare directories
+ dependencies:
+  - build
+  - copy_build
+ tags:
+   - cvmfs
+ script:
+  - pwd
+  - ls -lha
+  - ls -lha source
+  - ls -lha build
+  - ls -lha run
+  - cd build
+  - ls -lha
+  - less test.txt
+  - setupATLAS || echo ignore alrb
+  - lsetup asetup || echo ignore alrb
+  - release=`cat ../source/CxAODBootstrap_VHbb/bootstrap/release.txt`
+  - echo "release=$release"
+  - asetup AnalysisBase,$release,here || echo ignore alrb
+  - source x86_64-slc6-gcc62-opt/setup.sh
+  #- source "$(find . -iname "setup.sh")"
+  - cd ..
+  - mkdir -p ${JOB_DIR_ABS}/config/
+  - mkdir -p ${JOB_DIR_ABS}/DxAOD/
+  - mkdir -p ${JOB_DIR_ABS}/CxAOD/
+  - mkdir -p ${JOB_DIR_ABS}/validation/
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/config/
+   - ${JOB_DIR_ABS}/DxAOD/
+   - ${JOB_DIR_ABS}/CxAOD/
+   - ${JOB_DIR_ABS}/validation/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 7d
+
+.template: &r21_read
+ image: lukasheinrich/recast_cvmfs_assisted:20161231
+ stage: Run Reader
+ tags:
+   - cvmfs
+ script:
+  - echo "Start CxAOD production"
+  - echo "nrEvents=${nrEvents}"
+  - echo "selName=${selName}"
+  - echo "derivName=${derivName}"
+  - echo "basePath=${basePath}"
+  - echo "process=${process}"
+  - echo "mcSubDir=${mcSubDir}"
+  - echo "mcType=${mc16a}"
+  - echo "lumi=${lumi}"
+  - pwd
+  - ls -1
+  - du -sh *
+  - echo "Setup AnalysisBase"
+  - ls -lha
+  - ls -lha ./source
+  - ls -lha ./build
+  - ls -lha ./config
+  - ls -lha ./DxAOD
+  - ls -lha ./CxAOD
+  - ls -lha ./validation
+  - less ./build/test.txt
+  - ls -lha ./build/x86_64-slc6-gcc62-opt
+  - ls -lha ./build/x86_64-slc6-gcc62-opt/setup.sh
+  - inputConfig=${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - outputConfig=${JOB_DIR_ABS}/build/x86_64-slc6-gcc62-opt/data/CxAODReader_VHbb/config_Read_${derivName}_${process}_${mcSubDir}.cfg
+  - echo ${inputConfig}
+  - echo ${outputConfig}
+  - sed '/vector<string> samples = ttbar_nonallhad/c\vector<string> samples = '"${process}"''     ${inputConfig} > ${outputConfig}
+  - sed -i '/int maxEvents/c\int maxEvents = '"${nrEvents}"''                                                      ${outputConfig}
+  - sed -i '/float luminosity/c\float luminosity = '"${lumi}"''                                                    ${outputConfig}
+  - sed -i '/string dataset_dir/c\string dataset_dir = '"${JOB_DIR_ABS}/CxAOD/${derivName}_13TeV/${mcSubDir}"''    ${outputConfig}
+  - sed -i '/string mcPeriod/c\string mcPeriod = '"${mcType}"''                                                    ${outputConfig}
+  - sed -i '/^vector<string> prwFiles/ s/mc16a/'"${mcType}"'/g'                                                    ${outputConfig}
+  - echo "string yieldFile = "${JOB_DIR_ABS}"/CxAOD/"${derivName}"_13TeV/"${mcSubDir}"/yields.13TeV_sorted.txt" >> ${outputConfig}
+  - tail -n 15 ${outputConfig}
+  - pushd ${JOB_DIR_ABS}/build/x86_64-slc6-gcc62-opt/data/CxAODReader_VHbb/.
+  - pwd
+  - ls -lha
+  - popd
+  # set up analysis base manually
+  - cd build
+  - setupATLAS || echo ignore alrb
+  - lsetup asetup || echo ignore alrb
+  - release=`cat ../source/CxAODBootstrap_VHbb/bootstrap/release.txt`
+  - echo "release=$release"
+  - asetup AnalysisBase,$release,here || echo ignore alrb
+  - source x86_64-slc6-gcc62-opt/setup.sh
+  - ls -lha ${JOB_DIR_ABS}/build/x86_64-slc6-gcc62-opt/data/CxAODReader_VHbb
+  - cd $JOB_DIR_ABS/run
+  - pwd
+  - ls -lha
+  - echo "Start to download the input sample"
+  - targetDir=${JOB_DIR_ABS}/CxAOD/${derivName}_13TeV/${mcSubDir}/
+  - mkdir -p ${targetDir}
+  - scp -r ${CERN_USER}@lxplus.cern.ch:${basePath}/${derivName}_13TeV/${mcSubDir}/${process} ${targetDir}
+  - scp -r ${CERN_USER}@lxplus.cern.ch:${basePath}/${derivName}_13TeV/${mcSubDir}/yields.13TeV_sorted.txt $targetDir
+  - ls -lha
+  - ls -lha ${JOB_DIR_ABS}/CxAOD/.
+  - ls -lha ${targetDir}
+  - pwd
+  - ls -lha
+  - hsg5frameworkReadCxAOD submitDir_Reader_${derivName}_${process}_${mcSubDir} data/CxAODReader_VHbb/config_Read_${derivName}_${process}_${mcSubDir}.cfg
+  - ls -lha
+  - echo "Reader done, output is in ${JOB_DIR_ABS}/run/submitDir_${derivName}_${process}_${mcSubDir}"
+  - echo "End CxAOD production"
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/run/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 3d
+
+copy_build:
+  image: lukasheinrich/recast_cvmfs_assisted:20161231
+  stage: Build CxAODFramework
+  tags:
+    - cvmfs
+  script:
+    - scp -r ${CERN_USER}@lxplus.cern.ch:${BIN_DIR}/* ${JOB_DIR_ABS}
+    - ls -lha ${JOB_DIR_ABS}
+    - ls -lha ${JOB_DIR_ABS}/source
+    - ls -lha ${JOB_DIR_ABS}/build
+    - ls -lha ${JOB_DIR_ABS}/run
+  artifacts:
+    paths:
+     - ${JOB_DIR_ABS}/source/
+     - ${JOB_DIR_ABS}/build/
+     - ${JOB_DIR_ABS}/run/
+    name: "${JOB_DIR}_${CI_JOB_STAGE}"
+    expire_in: 7d
+  only:
+    variables:
+      # [nobuild] is part of the commit message, added with gitlab 11
+      - $CI_COMMIT_MESSAGE =~ /\[nobuild\]/
+
+.template: &config-0L-sm
+ image: lukasheinrich/recast_cvmfs_assisted:20161231
+ stage: Prepare configs
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+ tags:
+   - cvmfs
+ script:
+  - pwd
+  - ls -1
+  - selName="0lep"
+  - derivName="HIGG5D1"
+  - cp ${JOB_DIR_ABS}/source/CxAODReader_VHbb/data/framework-read.cfg ${JOB_DIR_ABS}/config/.
+  - cp ${JOB_DIR_ABS}/config/framework-read.cfg ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string analysisType/c\string analysisType = '"${selName}"'' ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string modelType/c\string modelType = ${modelType}'         ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - cat ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/config/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 7d
+
+.template: &config-1L-sm
+ image: lukasheinrich/recast_cvmfs_assisted:20161231
+ stage: Prepare configs
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+ tags:
+   - cvmfs
+ script:
+  - pwd
+  - ls -1
+  - selName="1lep"
+  - derivName="HIGG5D2"
+  - cp ${JOB_DIR_ABS}/source/CxAODReader_VHbb/data/framework-read.cfg ${JOB_DIR_ABS}/config/.
+  - sed -i '/bool doSplitWhfCR      = false/c\bool doSplitWhfCR      = true' ${JOB_DIR_ABS}/config/framework-read.cfg
+  - sed -i '/bool readMVA                  = false/c\bool readMVA                  = true' ${JOB_DIR_ABS}/config/framework-read.cfg
+  - sed '/string analysisType/c\string analysisType = '"${selName}"'' ${JOB_DIR_ABS}/config/framework-read.cfg > ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string modelType/c\string modelType = ${modelType}'         ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - cat ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/config/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 7d
+
+.template: &config-2L-sm
+ image: lukasheinrich/recast_cvmfs_assisted:20161231
+ stage: Prepare configs
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+ tags:
+   - cvmfs
+ script:
+  - pwd
+  - ls -1
+  - selName="2lep"
+  - derivName="HIGG2D4"
+  - cp ${JOB_DIR_ABS}/source/CxAODReader_VHbb/data/framework-read.cfg ${JOB_DIR_ABS}/config/.
+  - sed '/string analysisType/c\string analysisType = '"${selName}"'' ${JOB_DIR_ABS}/config/framework-read.cfg > ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string modelType/c\string modelType = ${modelType}'         ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - cat ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/config/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 7d
+
+config_0L_MVA_reader:
+ variables: {
+   modelType: MVA
+ }
+ <<: *config-0L-sm
+
+config_0L_CUT_reader:
+ variables: {
+   modelType: CUT
+ }
+ <<: *config-0L-sm
+
+config_1L_MVA_reader:
+  variables: {
+    modelType: MVA
+  }
+  <<: *config-1L-sm
+
+config_1L_CUT_reader:
+  variables: {
+    modelType: CUT
+  }
+  <<: *config-1L-sm
+
+config_2L_MVA_reader:
+  variables: {
+    modelType: MVA
+  }
+  <<: *config-2L-sm
+
+config_2L_CUT_reader:
+  variables: {
+    modelType: CUT
+  }
+  <<: *config-2L-sm
+
+config_vgamma_reader:
+ image: lukasheinrich/recast_cvmfs_assisted:20161231
+ stage: Prepare configs
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+ tags:
+   - cvmfs
+ variables:
+   selName: "vgamma"
+   derivName: "EXOT3"
+ script:
+  - pwd
+  - ls -1
+  - cp ${JOB_DIR_ABS}/source/CxAODReader_VHbb/data/framework-read-Vgamma.cfg ${JOB_DIR_ABS}/config/.
+  - cp ${JOB_DIR_ABS}/config/framework-read-Vgamma.cfg ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - cat ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/config/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 7d
+
+config_0L_azh:
+ stage: Prepare configs
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+ tags:
+   - cvmfs
+ variables:
+   selName: "0lep"
+   derivName: "HIGG5D1"
+ script:
+  - pwd
+  - ls -1
+  - cp ${JOB_DIR_ABS}/source/CxAODReader_VHbb/data/framework-read.cfg ${JOB_DIR_ABS}/config/.
+  - cp ${JOB_DIR_ABS}/config/framework-read.cfg ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string analysisType/c\string analysisType = '"${selName}"''             ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string modelType/c\string modelType = AZh'                              ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string analysisStrategy/c\string analysisStrategy = PriorityResolvedSR' ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doMergeCR/c\bool doMergeCR = true'                                 ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doMergeJetBins/c\bool doMergeJetBins = true'                       ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doBlindingMC/c\bool doBlindingMC = false'                           ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool readBDTs/c\bool readBDTs = false'                                  ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doExtendedPlots/c\bool doExtendedPlots = true'                     ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doTLVPlots/c\bool doTLVPlots = true'                               ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - cat ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/config/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 7d
+
+config_1L_hvt:
+  stage: Prepare configs
+  dependencies:
+    - build
+    - copy_build
+    - prepare
+  tags:
+    - cvmfs
+  variables:
+    selName: "1lep"
+    derivName: "HIGG5D2"
+  script:
+    - pwd
+    - ls -1
+    - cp ${JOB_DIR_ABS}/source/CxAODReader_VHbb/data/framework-read.cfg ${JOB_DIR_ABS}/config/.
+    - cp ${JOB_DIR_ABS}/config/framework-read.cfg ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/string analysisType/c\string analysisType = '"${selName}"''             ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/string modelType/c\string modelType = HVT'                              ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/string analysisStrategy/c\string analysisStrategy = PriorityResolvedSR' ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/bool doMergeCR/c\bool doMergeCR = true'                                 ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/bool doMergeJetBins/c\bool doMergeJetBins = true'                       ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/bool mVHvsPtvCut/c\bool mVHvsPtvCut = true'                             ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/bool doBlindingMC/c\bool doBlindingMC = false'                          ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/bool readBDTs/c\bool readBDTs = false'                                  ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/bool doExtendedPlots/c\bool doExtendedPlots = true'                     ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - sed -i '/bool doTLVPlots/c\bool doTLVPlots = true'                               ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+    - cat ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  artifacts:
+    paths:
+       - ${JOB_DIR_ABS}/config/
+    name: "${JOB_DIR}_${CI_JOB_STAGE}"
+    expire_in: 7d
+
+config_2L_azh:
+ stage: Prepare configs
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+ tags:
+   - cvmfs
+ variables:
+   selName: "2lep"
+   derivName: "HIGG2D4"
+ script:
+  - pwd
+  - ls -1
+  - cp ${JOB_DIR_ABS}/source/CxAODReader_VHbb/data/framework-read.cfg ${JOB_DIR_ABS}/config/.
+  - cp ${JOB_DIR_ABS}/config/framework-read.cfg ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string analysisType/c\string analysisType = '"${selName}"''             ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string modelType/c\string modelType = AZh'                              ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/string analysisStrategy/c\string analysisStrategy = PriorityResolvedSR' ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doMergeCR/c\bool doMergeCR = true'                                 ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doMergeJetBins/c\bool doMergeJetBins = true'                       ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doBlindingMC/c\bool doBlindingMC = false'                           ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool readBDTs/c\bool readBDTs = false'                                  ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doExtendedPlots/c\bool doExtendedPlots = true'                     ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - sed -i '/bool doTLVPlots/c\bool doTLVPlots = true'                               ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+  - cat ${JOB_DIR_ABS}/config/config_Read_${derivName}.cfg
+ artifacts:
+  paths:
+   - ${JOB_DIR_ABS}/config/
+  name: "${JOB_DIR}_${CI_JOB_STAGE}"
+  expire_in: 7d
+
+#
+# 0 lepton runners
+#
+
+# 0L azh data read / validate / update_refs
+# we cannot use templates because the stages depend on each other
+0L_azh_qqZvvHbbJ_PwPy8MINLO_mc16d_read:
+  # This jobs executes the hsg5frameworkReadCxAOD
+  dependencies:
+    # artifacts will be downloaded for all dependencies
+    # if a job is not executed because of only/except rules this will *not* lead to errors
+    # the artifacts will simply not be downloaded
+    - build
+    - copy_build
+    - prepare
+    - config_0L_azh
+  variables: {
+    nrEvents: "5000",  # maximal number of events, might be less if there are less in the file
+    selName: 0lep,      # selection name that will be put into the config
+    # The variables below specify the data path from were CxAODs are read
+    # The following path must exist on lxplus: ${basePath}/${derivName}/${mcSubDir}/${subDir}
+    derivName: HIGG5D1, # derivation name for output dir naming
+    basePath: /afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/,
+    process: qqZvvHbbJ_PwPy8MINLO,    # synonomous for sample. the sample to be processed
+    mcSubDir: CxAOD_31-24_d,  # monte carlo period
+    mcType: mc16d,      # to configure the correct PRW/XSec/yield files
+    lumi: "1"           # to normalise MC - but we don't care about normalization
+  }
+  <<: *r21_read
+
+# 0L MVA signal read / validate / update_refs
+0L_MVA_qqZvvHbbJ_PwPy8MINLO_mc16d_read:
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+  - config_0L_MVA_reader
+ variables:
+  nrEvents: "5000"
+  selName: "0lep"
+  derivName: "HIGG5D1"
+  basePath: "/afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/"
+  process: "qqZvvHbbJ_PwPy8MINLO"
+  mcSubDir: "CxAOD_31-24_d"
+  mcType: "mc16d"
+  lumi: "1"
+ <<: *r21_read
+
+# 0L CUT signal read / validate / update_refs
+0L_CUT_qqZvvHbbJ_PwPy8MINLO_mc16d_read:
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+  - config_0L_CUT_reader
+ variables:
+  nrEvents: "5000"
+  selName: "0lep"
+  derivName: "HIGG5D1"
+  basePath: "/afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/"
+  process: "qqZvvHbbJ_PwPy8MINLO"
+  mcSubDir: "CxAOD_31-24_d"
+  mcType: "mc16d"
+  lumi: "1"
+ <<: *r21_read
+
+#
+# 1 lepton runners
+#
+
+1L_hvt_qqWlvHbbJ_PwPy8MINLO_mc16d_read:
+  dependencies:
+    - build
+    - copy_build
+    - prepare
+    - config_1L_hvt
+  variables: {
+    nrEvents: "5000",
+    selName: 1lep,
+    derivName: HIGG5D2,
+    basePath: /afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/,
+    process: qqWlvHbbJ_PwPy8MINLO,
+    mcSubDir: CxAOD_31-24_d,
+    mcType: mc16d,
+    lumi: "1"
+  }
+  <<: *r21_read
+
+1L_MVA_qqWlvHbbJ_PwPy8MINLO_mc16d_read:
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+  - config_1L_MVA_reader
+ variables:
+  nrEvents: "5000"
+  selName: "1lep"
+  derivName: "HIGG5D2"
+  basePath: "/afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/"
+  process: "qqWlvHbbJ_PwPy8MINLO"
+  mcSubDir: "CxAOD_31-24_d"
+  mcType: "mc16d"
+  lumi: "1"
+ <<: *r21_read
+
+# 1L CUT signal read / validate / update_refs
+1L_CUT_qqWlvHbbJ_PwPy8MINLO_mc16d_read:
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+  - config_1L_CUT_reader
+ variables:
+  nrEvents: "5000"
+  selName: "1lep"
+  derivName: "HIGG5D2"
+  basePath: "/afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/"
+  process: "qqWlvHbbJ_PwPy8MINLO"
+  mcSubDir: "CxAOD_31-24_d"
+  mcType: "mc16d"
+  lumi: "1"
+ <<: *r21_read
+
+#
+# 2 lepton runners
+#
+
+2L_azh_qqZllHbbJ_PwPy8MINLO_mc16d_read:
+  dependencies:
+    - build
+    - copy_build
+    - prepare
+    - config_2L_azh
+  variables: {
+    nrEvents: "5000",
+    selName: 2lep,
+    derivName: HIGG2D4,
+    basePath: /afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/,
+    process: qqZllHbbJ_PwPy8MINLO,
+    mcSubDir: CxAOD_31-24_d,
+    mcType: mc16d,
+    lumi: "1"
+  }
+  <<: *r21_read
+
+2L_MVA_qqZllHbbJ_PwPy8MINLO_mc16d_read:
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+  - config_2L_MVA_reader
+ variables:
+  nrEvents: "5000"
+  selName: "2lep"
+  derivName: "HIGG2D4"
+  basePath: "/afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/"
+  process: "qqZllHbbJ_PwPy8MINLO"
+  mcSubDir: "CxAOD_31-24_d"
+  mcType: "mc16d"
+  lumi: "1"
+ <<: *r21_read
+
+# 2L CUT signal read / validate / update_refs
+2L_CUT_qqZllHbbJ_PwPy8MINLO_mc16d_read:
+ dependencies:
+  - build
+  - copy_build
+  - prepare
+  - config_2L_CUT_reader
+ variables:
+  nrEvents: "5000"
+  selName: "2lep"
+  derivName: "HIGG2D4"
+  basePath: "/afs/cern.ch/work/a/ahoenle/public/CxAODFramework_Ref/CxAOD/"
+  process: "qqZllHbbJ_PwPy8MINLO"
+  mcSubDir: "CxAOD_31-24_d"
+  mcType: "mc16d"
+  lumi: "1"
+ <<: *r21_read

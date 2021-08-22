@@ -1,0 +1,21 @@
+
+template <typename containerType>
+bool TrigObjects::retrieve(xAOD::TEvent * event, const containerType *& container, bool allowTrigObjFail) 
+{
+
+  if ( ! event->contains<containerType>( m_containerName ) ) {
+    if ( allowTrigObjFail ) return true;
+    else {
+      Error("TrigObject::retrieve()","TEvent doesn't have container %s (called from %s)", m_containerName.c_str(), m_name.c_str());
+      return false;
+    }
+  }
+
+  if ( ! event->retrieve( container , m_containerName.c_str() ).isSuccess() ) {
+    Error("TrigObject::retrieve()","Cannot retrieve container %s (called from %s) - this shouldn't be able to happen!!!", m_containerName.c_str(), m_name.c_str());
+    return false;
+  }
+
+  return true;
+
+}

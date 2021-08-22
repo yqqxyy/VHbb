@@ -1,0 +1,11 @@
+# Package             # Git repository    # branch (origin/*) or tag (r*)                            # copy files like *.root to data/
+CxAODOperations       CxAODFramework      origin/master                                              0
+CxAODOperations_VHbb  CxAODFramework      origin/master                                              1
+CxAODMaker            CxAODFramework      origin/master                                              1
+CxAODMaker_VHbb       CxAODFramework      origin/master                                              0
+CxAODReader           CxAODFramework      origin/master                                              0
+CxAODReader_VHbb      CxAODFramework      origin/master                                              1
+CxAODTools            CxAODFramework      origin/master                                              1
+CxAODTools_VHbb       CxAODFramework      origin/master                                              0
+CorrsAndSysts         CxAODFramework      origin/master  		                                     1
+KinematicFit          CxAODFramework      origin/master			                                     1

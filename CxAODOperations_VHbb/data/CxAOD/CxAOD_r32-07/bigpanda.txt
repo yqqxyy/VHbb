@@ -1,0 +1,47 @@
+0L a
+
+https://bigpanda.cern.ch/tasks/?taskname=*data15*.CAOD_HIGG5D1.*.32-07*/&display_limit=1000&days=40&username=Luca%20Ambroz
+https://bigpanda.cern.ch/tasks/?taskname=*data16*.CAOD_HIGG5D1.*.32-07*/&display_limit=1000&days=40&username=Luca%20Ambroz
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r9364_r9315*.CAOD_HIGG5D1.*.32-07*/&display_limit=1000&days=40&username=Luca%20Ambroz
+
+0L d
+
+https://bigpanda.cern.ch/tasks/?taskname=*data17*.CAOD_HIGG5D1.*.32-07*/&display_limit=1000&days=40&username=Luca%20Ambroz
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r10201_r10210*.CAOD_HIGG5D1.*.32-07*/&display_limit=1000&days=40&username=Luca%20Ambroz
+
+0L e
+
+https://bigpanda.cern.ch/tasks/?taskname=*data18*.CAOD_HIGG5D1.*.32-07*/&display_limit=1000&days=40&username=Luca%20Ambroz
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r10724_r10726*.CAOD_HIGG5D1.*.32-07*/&display_limit=1000&days=40&username=Luca%20Ambroz
+
+1L a
+
+https://bigpanda.cern.ch/tasks/?taskname=*data15*.CAOD_HIGG5D2.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*data16*.CAOD_HIGG5D2.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r9364_r9315*.CAOD_HIGG5D2.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+
+1L d
+
+https://bigpanda.cern.ch/tasks/?taskname=*data17*.CAOD_HIGG5D2.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r10201_r10210*.CAOD_HIGG5D2.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+
+1L e
+
+https://bigpanda.cern.ch/tasks/?taskname=*data18*.CAOD_HIGG5D2.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r10724_r10726*.CAOD_HIGG5D2.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+
+2L a
+
+https://bigpanda.cern.ch/tasks/?taskname=*data15*.CAOD_HIGG2D4.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*data16*.CAOD_HIGG2D4.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r9364_r9315*.CAOD_HIGG2D4.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+
+2L d
+
+https://bigpanda.cern.ch/tasks/?taskname=*data17*.CAOD_HIGG2D4.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r10201_r10210*.CAOD_HIGG2D4.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+
+2L e
+
+https://bigpanda.cern.ch/tasks/?taskname=*data18*.CAOD_HIGG2D4.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu
+https://bigpanda.cern.ch/tasks/?taskname=*mc16*r10724_r10726*.CAOD_HIGG2D4.*.32-07-3*/&display_limit=1000&days=40&username=Adrian%20Buzatu

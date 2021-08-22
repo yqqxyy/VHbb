@@ -1,0 +1,36 @@
+# 0L a
+0L_data16        0L a VHbb   1000  VHbb/data16_13TeV.00311321.physics_Main.deriv.DAOD_HIGG5D1.r9264_p3083_p3640
+0L_mc16a_ZHvvbb  0L a VHbb    200  VHbb/mc16_13TeV.345056.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_vvbb_VpT.deriv.DAOD_HIGG5D1.e5706_e5984_s3126_r9364_r9315_p3641
+0L_mc16a_ttbar   0L a VHbb    200  VHbb/mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D1.e6337_e5984_s3126_r9364_r9315_p3639
+# 0L d
+0L_data17        0L d VHbb   1000  VHbb/data17_13TeV.00327761.physics_Main.deriv.DAOD_HIGG5D1.r10203_p3399_p3640
+0L_mc16d_ZHvvbb  0L d VHbb    200  VHbb/mc16_13TeV.345056.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_vvbb_VpT.deriv.DAOD_HIGG5D1.e5706_e5984_s3126_r10201_r10210_p3641
+0L_mc16d_ttbar   0L d VHbb    200  VHbb/mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D1.e6337_e5984_s3126_r10201_r10210_p3639
+# 0L e
+0L_data18        0L e VHbb   1000  VHbb/data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG5D1.f1002_m2037_p3718
+0L_mc16e_ZHvvbb  0L e VHbb    200  VHbb/mc16_13TeV.345056.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_vvbb_VpT.deriv.DAOD_HIGG5D1.e5706_s3126_r10724_p3717
+0L_mc16e_ttbar   0L e VHbb    200  VHbb/mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D1.e6337_s3126_r10724_p3717
+# 1L a
+1L_data16        1L a VHbb   1000  VHbb/data16_13TeV.00311321.physics_Main.deriv.DAOD_HIGG5D2.r9264_p3083_p3640
+1L_mc16a_WHlvbb  1L a VHbb    200  VHbb/mc16_13TeV.345053.PowhegPythia8EvtGen_NNPDF3_AZNLO_WmH125J_MINLO_lvbb_VpT.deriv.DAOD_HIGG5D2.e5706_e5984_s3126_r9364_r9315_p3641
+1L_mc16a_ttbar   1L a VHbb    200  VHbb/mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D2.e6337_e5984_s3126_r9364_r9315_p3639
+# 1L d
+1L_data17        1L d VHbb   1000  VHbb/data17_13TeV.00327761.physics_Main.deriv.DAOD_HIGG5D2.r10203_p3399_p3640
+1L_mc16d_WHlvbb  1L d VHbb    200  VHbb/mc16_13TeV.345053.PowhegPythia8EvtGen_NNPDF3_AZNLO_WmH125J_MINLO_lvbb_VpT.deriv.DAOD_HIGG5D2.e5706_e5984_s3126_r10201_r10210_p3641
+1L_mc16d_ttbar   1L d VHbb    200  VHbb/mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D2.e6337_e5984_s3126_r10201_r10210_p3639
+# 1L e
+1L_data18        1L e VHbb   1000  VHbb/data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG5D2.f1002_m2037_p3718
+1L_mc16e_WHlvbb  1L e VHbb    200  VHbb/mc16_13TeV.345053.PowhegPythia8EvtGen_NNPDF3_AZNLO_WmH125J_MINLO_lvbb_VpT.deriv.DAOD_HIGG5D2.e5706_s3126_r10724_p3717
+1L_mc16e_ttbar   1L e VHbb    200  VHbb/mc16_13TeV.410470.PhPy8EG_A14_ttbar_hdamp258p75_nonallhad.deriv.DAOD_HIGG5D2.e6337_s3126_r10724_p3717
+# 2L a
+2L_data16        2L a VHbb   1000  VHbb/data16_13TeV.00311321.physics_Main.deriv.DAOD_HIGG2D4.r9264_p3083_p3640
+2L_mc16a_ZHllbb  2L a VHbb    200  VHbb/mc16_13TeV.345055.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_llbb_VpT.deriv.DAOD_HIGG2D4.e5706_e5984_s3126_r9364_r9315_p3641
+2L_mc16a_ttbar   2L a VHbb    200  VHbb/mc16_13TeV.410472.PhPy8EG_A14_ttbar_hdamp258p75_dil.deriv.DAOD_HIGG2D4.e6348_e5984_s3126_r9364_r9315_p3639
+# 2L d
+2L_data17        2L d VHbb   1000  VHbb/data17_13TeV.00327761.physics_Main.deriv.DAOD_HIGG2D4.r10203_p3399_p3640
+2L_mc16d_ZHllbb  2L d VHbb    200  VHbb/mc16_13TeV.345055.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_llbb_VpT.deriv.DAOD_HIGG2D4.e5706_e5984_s3126_r10201_r10210_p3641
+2L_mc16d_ttbar   2L d VHbb    200  VHbb/mc16_13TeV.410472.PhPy8EG_A14_ttbar_hdamp258p75_dil.deriv.DAOD_HIGG2D4.e6348_e5984_s3126_r10201_r10210_p3639
+# 2L e
+2L_data18        2L e VHbb   1000  VHbb/data18_13TeV.00364292.physics_Main.deriv.DAOD_HIGG2D4.f1002_m2037_p3640
+2L_mc16e_ZHllbb  2L e VHbb    200  VHbb/mc16_13TeV.345055.PowhegPythia8EvtGen_NNPDF3_AZNLO_ZH125J_MINLO_llbb_VpT.deriv.DAOD_HIGG2D4.e5706_e5984_s3126_r10724_r10726_p3641
+2L_mc16e_ttbar   2L e VHbb    200  VHbb/mc16_13TeV.410472.PhPy8EG_A14_ttbar_hdamp258p75_dil.deriv.DAOD_HIGG2D4.e6348_e5984_s3126_r10724_r10726_p3639

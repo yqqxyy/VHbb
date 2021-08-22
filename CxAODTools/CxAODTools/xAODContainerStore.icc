@@ -1,0 +1,8 @@
+// Dear emacs, this is -*- C++ -*-
+#include "CxAODTools/xAODContainerStore.h"
+
+//Template
+template<typename RecoType> 
+xAODContainerStore<RecoType>::xAODContainerStore()
+{
+}	

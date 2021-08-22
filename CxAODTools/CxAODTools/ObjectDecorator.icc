@@ -1,0 +1,118 @@
+// Dear emacs, this is -*-c++-*-
+
+
+template <typename T>
+void PROP<T>::set(const SG::AuxElement * object, const T & value) {
+
+  if ( ! acc->isAvailable(*object) ) {
+    // property not available
+    // -> attach with decorator
+    (*dec)(*object) = value;
+    return;
+  }
+
+  // check if the aux container is const
+  bool isConst = (object->container()->getStore() == 0);
+  
+  // we need a non-const object for isAvailableWritable
+  SG::AuxElement* object_nonConst = const_cast<SG::AuxElement*>(object);
+  
+  // the following Accessor call is necessary in case of
+  // a SC to make it point to the object in the SC
+  // instead of the original object for isAvailableWritable
+  if ( !isConst ) {
+    // container is non-const 
+    // -> we can call on non-const object
+    (*acc)(*object_nonConst);
+  }
+  // a call of (*acc)(*object) in case of a const container gives an unexpected crash
+  // on the 2nd event, but seems not to be needed, anyway
+  
+  if ( acc->isAvailableWritable(*object_nonConst) ) {
+    // we have a non-const container
+    // -> overwrite using Accessor
+    (*acc)(*object_nonConst) = value;
+    return;
+  } 
+
+  if ( dec->isAvailableWritable(*object_nonConst) ) {
+    // we have a const container, but this property was decorated
+    // -> overwrite using Decorator
+    (*dec)(*object_nonConst) = value;
+    return;
+  }
+
+  // we have a const container and this property was not decorated
+  // -> exit 
+  Error((scope + "::" + name + "<" + type + ">::set()").c_str(), "You are trying to modify the existing property '%s' of a const object.", name.c_str());
+  exit(EXIT_FAILURE);
+
+}
+
+
+template <typename T>
+T PROP<T>::get(const SG::AuxElement * object) {
+
+  if ( exists(object) ) {
+    return (*acc)(*object);
+  }
+
+  Error((scope + "::" + name + "<" + type + ">::get()").c_str(), "Accessor is not available.");
+  exit(EXIT_FAILURE);
+  return T();
+
+}
+
+
+template <typename T>
+bool PROP<T>::get(const SG::AuxElement * object, T & value) {
+
+  if ( exists(object) ) {
+    value = (*acc)(*object);
+    return true;
+  }
+
+  return false;
+
+}
+
+
+template <typename T>
+void PROP<T>::copy(const SG::AuxElement * objectIn, SG::AuxElement * objectOut) {
+  
+  if ( ! exists(objectIn) ) {
+    Error((scope + "::" + name + "<" + type + ">::copy()").c_str(), "Accessor is not available.");
+    exit(EXIT_FAILURE);
+  }
+  
+  set( objectOut , get(objectIn) );
+  
+}
+
+
+template <typename T>
+bool PROP<T>::exists(const SG::AuxElement * object) { 
+
+  if ( ! acc ) {
+    // Accessor is not initialised!
+    // Shouldn't happen ever - but just in case...
+    Error((scope + "::" + name + "<" + type + ">::exists()").c_str(), "Accessor is not initialised.");    
+    return false;
+  }
+
+  return acc->isAvailable(*object); 
+
+}
+
+
+template <typename T>
+bool PROP<T>::copyIfExists(const SG::AuxElement * objectIn, SG::AuxElement * objectOut) {
+  
+  if ( ! exists(objectIn) ) {
+    return false;
+  }
+  
+  set( objectOut , get(objectIn) );
+  
+  return true;
+}

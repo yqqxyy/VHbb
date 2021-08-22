@@ -1,0 +1,4 @@
+# to update gitlab-ci.yml after we updated CxAODOperations_VHbb/DxAOD/info/forCIPipelineTasks.txt
+cat .gitlab-ci-stem.yml /data06/abuzatu/code/CxAODFramework_branch_master_21.2.52_7/build/x86_64-slc6-gcc62-opt/data/CxAODOperations_VHbb/DxAOD/info/forCIPipelineTasks.txt > .gitlab-ci.yml
+# to update CxAODOperations_VHbb/DxAOD/info/forCIPipelineTasks.txt you do
+source ../source/CxAODOperations_VHbb/scripts/testLocallyAsInCIPipeline.sh

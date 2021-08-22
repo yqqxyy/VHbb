@@ -1,0 +1,202 @@
+###########
+## flags ##
+###########
+#HLT_mu14
+HLT_mu20_iloose_L1MU15
+HLT_mu24_iloose_L1MU15
+HLT_mu24_imedium
+#HLT_2mu10
+#HLT_e17_lhloose_L1EM15
+HLT_e24_lhmedium_iloose_L1EM20VH
+HLT_e24_lhmedium_nod0_L1EM20VH
+HLT_e24_lhmedium_ivarloose
+HLT_e24_lhtight_ivarloose
+HLT_e24_lhtight_nod0_ivarloose
+HLT_e26_lhtight_ivarloose
+HLT_e26_lhtight_nod0_ivarloose
+HLT_e26_lhtight_nod0_ivarloose
+HLT_e300_etcut
+HLT_e120_lhloose
+HLT_e140_lhloose_nod0
+HLT_e140_lhloose
+#HLT_e26_tight_iloose
+#HLT_e26_tight1_iloose
+#HLT_e26_lhtight_iloose
+#HLT_e60_medium
+#HLT_e60_medium1
+HLT_e60_lhmedium_nod0
+HLT_e80_lhmedium_nod0
+HLT_e60_lhmedium
+#HLT_2e17_loose
+#HLT_2e17_loose1
+#HLT_2e17_lhloose
+HLT_mu26_imedium
+HLT_mu26_ivarmedium
+HLT_mu28_ivarmedium
+HLT_mu50
+HLT_mu60_0eta105_msonly
+#HLT_mu80
+#HLT_2mu14
+
+HLT_e17_lhmedium_tau25_medium1_tracktwo
+HLT_e17_lhmedium_nod0_tau25_medium1_tracktwo 
+#period A
+HLT_e17_lhmedium_nod0_ivarloose_tau25_medium1_tracktwo
+# (with J25)
+HLT_e17_lhmedium_nod0_tau80_medium1_tracktwo 
+HLT_e17_medium_iloose_tau25_medium1_tracktwo
+HLT_e17_lhmedium_iloose_tau25_medium1_tracktwo
+HLT_e17_lhmedium_nod0_ivarloose_tau25_medium1_tracktwo_L1DR-EM15TAU12I-J25
+HLT_e17_lhmedium_nod0_ivarloose_tau35_medium1_tracktwo
+HLT_e17_lhmedium_nod0_ivarloose_tau25_medium1_tracktwo_L1EM15VHI_2TAU12IM_4J12
+#
+# e+tau/jet triggers (2017)
+HLT_e24_lhmedium_nod0_ivarloose_tau35_medium1_tracktwo
+HLT_e20_lhtight_nod0_ivarloose_3j20_L1EM18VHI_3J20
+#
+HLT_mu14_tau25_medium1_tracktwo
+#period A
+HLT_mu14_ivarloose_tau25_medium1_tracktwo 
+#(with J25)
+HLT_mu14_ivarloose_tau35_medium1_tracktwo
+HLT_mu14_iloose_tau25_medium1_tracktwo
+#(with J25)
+HLT_mu14_iloose_tau35_medium1_tracktwo
+#HLT_mu14_tau35_medium1_tracktwo_L1TAU20
+#HLT_mu14_tau35_medium1_tracktwo
+HLT_mu14_ivarloose_tau25_medium1_tracktwo_L1DR-MU10TAU12I_TAU12I-J25
+HLT_mu14_ivarloose_tau35_medium1_tracktwo_L1MU10_TAU20IM_J25_2J20
+HLT_mu14_ivarloose_tau35_medium1_tracktwo
+HLT_mu14_ivarloose_tau25_medium1_tracktwo_L1MU10_TAU12IM_3J12
+#
+# mu+jet triggers (2017)
+HLT_mu14_ivarloose_3j20_L1MU10_3J20
+HLT_mu20_ivarmedium_L1MU10_2J20
+HLT_mu20_ivarmedium_L1MU10_2J15_J20
+
+
+# 2018 LTT
+# tau+e+1J 
+HLT_e17_lhmedium_nod0_ivarloose_tau25_medium1_tracktwoEF
+HLT_e17_lhmedium_nod0_ivarloose_tau25_mediumRNN_tracktwoMVA
+
+# tau+e+1J (backup) 
+HLT_e24_lhmedium_nod0_ivarloose_tau35_medium1_tracktwoEF
+HLT_e24_lhmedium_nod0_ivarloose_tau35_mediumRNN_tracktwoMVA
+
+# tau+e+1J (L1Topo) 
+HLT_e17_lhmedium_nod0_ivarloose_tau25_medium1_tracktwoEF_L1DR-EM15TAU12I-J25
+HLT_e17_lhmedium_nod0_ivarloose_tau25_mediumRNN_tracktwoMVA_L1DR-EM15TAU12I-J25
+
+# tau+e+2J 
+HLT_e17_lhmedium_nod0_ivarloose_tau25_medium1_tracktwoEF_L1EM15VHI_2TAU12IM_4J12
+HLT_e17_lhmedium_nod0_ivarloose_tau25_mediumRNN_tracktwoMVA_L1EM15VHI_2TAU12IM_4J12
+
+# tau+mu 
+HLT_mu14_ivarloose_tau35_medium1_tracktwoEF
+HLT_mu14_ivarloose_tau35_mediumRNN_tracktwoMVA
+
+# tau+mu+1J 
+HLT_mu14_ivarloose_tau25_medium1_tracktwoEF
+HLT_mu14_ivarloose_tau25_mediumRNN_tracktwoMVA
+
+# tau+mu+1J (backup) 
+HLT_mu14_ivarloose_tau35_medium1_tracktwoEF_L1MU10_TAU20IM_J25_2J20
+HLT_mu14_ivarloose_tau35_mediumRNN_tracktwoMVA_L1MU10_TAU20IM_J25_2J20
+
+# tau+mu+1J (L1Topo) 
+HLT_mu14_ivarloose_tau25_medium1_tracktwoEF_L1DR-MU10TAU12I_TAU12I-J25
+HLT_mu14_ivarloose_tau25_mediumRNN_tracktwoMVA_L1DR-MU10TAU12I_TAU12I-J25
+
+# tau+mu+2J 
+HLT_mu14_ivarloose_tau25_medium1_tracktwoEF_L1MU10_TAU12IM_3J12
+HLT_mu14_ivarloose_tau25_mediumRNN_tracktwoMVA_L1MU10_TAU12IM_3J12
+
+
+# inclusive MET trigger
+# 2015
+HLT_xe70
+
+# 2016 (A - D3)
+HLT_xe90_mht_L1XE50
+
+# 2016 (>= D4)
+HLT_xe110_mht_L1XE50
+
+# 2017
+HLT_xe110_pufit_L1XE55
+
+# 2018
+HLT_xe110_pufit_xe70_L1XE50
+
+
+
+# hadhad
+# STT
+HLT_tau80_medium1_tracktwo_L1TAU60
+HLT_tau125_medium1_tracktwo
+HLT_tau160_medium1_tracktwo
+HLT_tau160_medium1_tracktwo_L1TAU100
+HLT_tau160_medium1_tracktwoEF_L1TAU100
+HLT_tau160_mediumRNN_tracktwoMVA_L1TAU100
+
+# DTT
+HLT_tau35_loose1_tracktwo_tau25_loose1_tracktwo
+HLT_tau35_medium1_tracktwoEF_tau25_medium1_tracktwoEF_L1DR-TAU20ITAU12I-J25
+HLT_tau35_medium1_tracktwo_tau25_medium1_tracktwo
+HLT_tau35_medium1_tracktwo_tau25_medium1_tracktwo_03dR30_L1DR-TAU20ITAU12I-J25
+HLT_tau35_medium1_tracktwoEF_tau25_medium1_tracktwoEF_03dR30_L1DR-TAU20ITAU12I-J25
+HLT_tau35_mediumRNN_tracktwoMVA_tau25_mediumRNN_tracktwoMVA_03dR30_L1DR-TAU20ITAU12I-J25
+HLT_tau35_medium1_tracktwo_tau25_medium1_tracktwo_L1DR-TAU20ITAU12I-J25
+HLT_tau35_medium1_tracktwo_tau25_medium1_tracktwo_L1TAU20IM_2TAU12IM
+HLT_tau35_mediumRNN_tracktwoMVA_tau25_mediumRNN_tracktwoMVA_L1DR-TAU20ITAU12I-J25
+HLT_tau35_medium1_tracktwo_tau25_medium1_tracktwo_L1TAU20IM_2TAU12IM_4J12
+HLT_tau35_medium1_tracktwoEF_tau25_medium1_tracktwoEF_L1TAU20IM_2TAU12IM_4J12.0ETA23
+HLT_tau35_mediumRNN_tracktwoMVA_tau25_mediumRNN_tracktwoMVA_L1TAU20IM_2TAU12IM_4J12.0ETA23
+HLT_tau40_medium1_tracktwoEF_tau35_medium1_tracktwoEF
+HLT_tau40_medium1_tracktwo_tau35_medium1_tracktwo
+HLT_tau40_mediumRNN_tracktwoMVA_tau35_mediumRNN_tracktwoMVA
+HLT_tau80_medium1_TAU60_tau50_medium1_L1TAU12
+HLT_tau80_medium1_tracktwoEF_L1TAU60_tau35_medium1_tracktwoEF_L1TAU12IM_L1TAU60_DR-TAU20ITAU12I
+HLT_tau80_medium1_tracktwoEF_L1TAU60_tau60_medium1_tracktwoEF_L1TAU40
+HLT_tau80_medium1_tracktwo_L1TAU60_tau35_medium1_tracktwo_L1TAU12IM_L1TAU60_DR-TAU20ITAU12I
+HLT_tau80_medium1_tracktwo_L1TAU60_tau50_medium1_tracktwo_L1TAU12
+HLT_tau80_medium1_tracktwo_L1TAU60_tau60_medium1_tracktwo_L1TAU40
+HLT_tau80_mediumRNN_tracktwoMVA_L1TAU60_tau35_mediumRNN_tracktwoMVA_L1TAU12IM_L1TAU60_DR-TAU20ITAU12I
+HLT_tau80_mediumRNN_tracktwoMVA_L1TAU60_tau60_mediumRNN_tracktwoMVA_L1TAU40
+
+#leplep
+HLT_e24_lhmedium_L1EM20VH
+HLT_e60_lhmedium
+HLT_e120_lhloose
+HLT_e26_lhtight_nod0_ivarloose
+HLT_e60_lhmedium_nod0
+HLT_e140_lhloose_nod0
+HLT_mu20_iloose_L1MU15
+HLT_mu50
+HLT_mu26_ivarmedium
+HLT_2e12_lhloose_L12EM10VH
+HLT_2e17_lhvloose_nod0
+HLT_mu18_mu8noL1
+HLT_mu22_mu8noL1
+HLT_e17_lhloose_mu14
+HLT_e17_lhloose_nod0_mu14
+
+#####################################################################
+## objects -> needed for jet trigger matching done at Reader level ##
+#####################################################################
+#HLT_JetPt
+#HLT_JetPhi
+#HLT_JetEta
+#Boosted Triggers
+HLT_j360_a10r_L1J100 
+HLT_j360_a10_lcw_L1J100 
+HLT_j400_a10r_L1J100 
+HLT_j400_a10_lcw_L1J100 
+HLT_j420_a10r_L1J100 
+HLT_j420_a10_lcw_L1J100 
+HLT_j440_a10r_L1J100 
+HLT_j460_a10r_L1J100 
+HLT_j460_a10_lcw_subjes_L1J100 
+HLT_j480_a10r_L1J100 
+HLT_j480_a10_lcw_subjes_L1J100

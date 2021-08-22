@@ -1,0 +1,30 @@
+#######################################################################
+# The lowest triggers we can access for different CxAOD productions : #
+#######################################################################
+
+14-01                                      | 16-01                                                               | 18-01
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+mu_26_imedium                              | mu20_iloose_L1MU15                                                  | mu20_iloose_L1MU15
+mu50                                       | mu50                                                                | mu50
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+e26_lhtight_iloose                         | 25ns : e26_lhtight_iloose                                           | 25ns data : e24_lhmedium_L1EM20VH
+                                           |                                                                     | 25ns MC   : e24_lhmedium_L1EM18VH
+                                           | 50ns : e24_lhmedium_iloose_L1EM18VH                                 | 50ns      : e24_lhmedium_iloose_L1EM18VH
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+e60_lhmedium                               | e60_lhmedium                                                        | e60_lhmedium
+                                           |                                                                     | e120_lhloose (2lep only), for 1lep need to have new derivations done
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+xe80                                       | xe70                                                                | xe70
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+muon trigger SF -> computed at reader only | electron trig SF -> computed at maker : for loose, med or tight el  | electron trig SF -> computed at maker : for loose, med or tight el  AND some extras
+                                           |                                                                     | electron trig MC eff -> same el qualitites as SF
+                                           | muon trig SF -> computed at maker : med muon / mu26ORmu50 only      | muon trig SF -> computed at maker : for loose muon only / all triggers possible are stored
+                                           |              -> can compute the mu20ORmu50 at reader wih loose muon |              -> can re-compute what we want at reader wih loose, med or tight muon
+
+#################################################################
+# The various trigger menus for run2 lumi prospects and infos : #
+#################################################################
+
+http://djamin.web.cern.ch/djamin/higgs/run2/moriond_2016/20151113_trigger_summary/jamin_Hbb_lepton_triggers_11132015.pdf
+or
+https://indico.cern.ch/event/461070/contribution/2/attachments/1186919/1721263/jamin_Hbb_lepton_triggers_11132015.pdf

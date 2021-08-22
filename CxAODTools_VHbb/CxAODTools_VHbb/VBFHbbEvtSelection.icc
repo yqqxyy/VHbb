@@ -1,0 +1,219 @@
+// dear emacs, this is -*- C++ -*-
+#include "xAODEgamma/Electron.h"
+#include "xAODMuon/Muon.h"
+#include "xAODJet/Jet.h"
+#include "xAODEventInfo/EventInfo.h"
+
+#include "CxAODTools_VHbb/CommonProperties_VBFHbb.h"
+//
+#include <utility>
+
+template<typename T>
+VBFHbbEvtSelection<T>::VBFHbbEvtSelection() noexcept 
+  : EventSelection(),
+  m_result() {}
+
+template<typename T>
+bool VBFHbbEvtSelection<T>::passSelection(SelectionContainers & containers, bool /*isKinVar*/) {
+
+  const xAOD::JetContainer    * jets      = containers.jets;
+  const xAOD::JetContainer    * trackjets = containers.trackjets;
+  const xAOD::EventInfo       * evtinfo   = containers.evtinfo;
+
+  // assume that T has a field bool pass
+  clearResult();
+  if ( evtinfo && !passTriggerSelection(evtinfo) ) {
+    m_result.pass = false;
+    return false;
+  }
+  
+  if ( jets && !passJetSelection(jets)) {
+    m_result.pass = false;
+    return false;
+  }
+
+  if(! passKinematics()) {
+    m_result.pass = false;
+    return false;
+  }
+  // not used for selection
+  if (trackjets)
+    passTrackJetSelection(trackjets);
+  m_result.pass = true;
+  return true;
+}
+
+template<typename T>
+bool VBFHbbEvtSelection<T>::passPreSelection(SelectionContainers & containers, bool /*isKinVar*/) {
+
+  const xAOD::EventInfo       * evtinfo   = containers.evtinfo;
+  const xAOD::JetContainer    * jets      = containers.jets;
+  const xAOD::JetContainer    * trackjets = containers.trackjets;
+  // assume that T has a field bool pass
+  clearResult();
+
+  //todo : implement cut flow
+
+  // event cleaning
+  bool passEventCleaning = true;
+  if ( evtinfo ) {
+    bool isMC = Props::isMC.get(evtinfo);
+    passEventCleaning &= Props::hasPV.get(evtinfo);
+    if (!isMC) {
+      passEventCleaning &= Props::passGRL.get(evtinfo);
+      passEventCleaning &= Props::isCleanEvent.get(evtinfo);
+    }
+
+    if(!passEventCleaning){
+      m_result.pass = false;
+      return false;
+    }
+
+  }
+
+  // jets
+  if ( jets ) {
+    if(! passJetPreSelection(jets)) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+
+  // Trigger to be implemented
+  if(! passTriggerPreSelection(evtinfo)) {
+    m_result.pass = false;
+    return false;
+  }
+
+  // not used for selection
+  if (trackjets){
+    passTrackJetPreSelection(trackjets);
+  }
+
+  m_result.pass = true;
+  return true;
+
+}
+
+// Pre-selection versions
+template<typename T>
+bool VBFHbbEvtSelection<T>::passTriggerPreSelection(const xAOD::EventInfo* evtinfo) {
+
+  //bool passesNewVBFTriggers =
+  //  ( Props::passL1_J40_0ETA25_2J25_J20_31ETA49.get(evtinfo) && (   Props::passHLT_j80_bmv2c2070_split_j60_bmv2c2085_split_j45_320eta490.get(evtinfo)
+  //                                                                  || Props::passHLT_j80_0eta240_j60_j45_320eta490.get(evtinfo) ))
+  //  || 
+  //  ( Props::passL1_J40_0ETA25_2J15_31ETA49.get(evtinfo) && (   Props::passHLT_j80_bmv2c2085_split_2j60_320eta490.get(evtinfo)
+  //                                                              || Props::passHLT_j80_0eta240_2j60_320eta490.get(evtinfo) ));
+
+  ////careful with activating this! these triggers only work for mc. data has passHLT_2j45_bmv2c2070_split_2j45_L14J15
+  //bool passesOldTriggers = Props::passL1_4J20.get(evtinfo) && (Props::passHLT_2j55_bmv2c2077_split_2j55.get(evtinfo) || Props::passHLT_2j45_bmv2c2070_split_2j45.get(evtinfo));
+
+  //bool passesOldOtherTriggers = Props::passL1_4J15.get(evtinfo) && (
+  //       Props::passHLT_2j35_bmv2c2070_split_2j35_L14J15.get(evtinfo)
+  //    || Props::passHLT_2j35_bmv2c2060_split_2j35_L14J15.get(evtinfo)
+  //    || Props::passHLT_2j35_bmv2c2050_split_2j35_L14J15.get(evtinfo)
+  //    || Props::passHLT_j75_bmv2c2060_split_3j75_L14J15.get(evtinfo)
+  //    || Props::passHLT_j75_bmv2c2070_split_3j75_L14J15.get(evtinfo));
+
+  //return passesNewVBFTriggers || passesOldTriggers || passesOldOtherTriggers;
+  return true;
+}
+
+  
+
+template<typename T>
+bool VBFHbbEvtSelection<T>::passJetPreSelection(const xAOD::JetContainer* jets) {
+  // assume that T has fields vector<Jet*> jets, forwardJets
+  m_result.jets.clear();
+  m_result.forwardJets.clear();
+  // look at signal jets, veto jets
+  // if pass VH jets selection fill T.jets and return true
+  // fill T.jets in decreasing pT order
+  // else return false
+  int njets_50(0);
+  int nsignaljets(0);
+  int nfwdjets(0);
+  for (unsigned int iJet(0) ; iJet < jets->size(); ++iJet) {
+    const xAOD::Jet * jet = jets->at(iJet);
+    if (!Props::goodJet.get(jet)) continue; //Loop only on good jets
+    if (!Props::passOR.get(jet)) continue; 
+    if (Props::isVBFJet.get(jet)) { // applied to keep CxAOD jets already
+      //std::cout << "jetOLOL\tpt " << jet->pt()*0.001 << ", eta " << jet->eta() << ", phi " << jet->phi() << "\n";
+      m_result.jets.push_back(jet);
+      njets_50++;
+      if (jet->eta() > 3.2){
+        nfwdjets++;
+        m_result.forwardJets.push_back(jet);
+      }
+      if (Props::isVBFSignalJet.get(jet))
+        nsignaljets++;
+    }
+  }
+  // Jets appear to be pt ordered but just in case
+  std::sort(m_result.jets.begin(), m_result.jets.end(), sort_pt);
+
+  //fk return (njets_50>=4 && nsignaljets>=2);
+  return (njets_50>=3);
+
+}
+
+template<typename T>
+int VBFHbbEvtSelection<T>::doVBFPhotonSelection(const xAOD::PhotonContainer* photons,
+						const xAOD::Photon*& ph){
+  //one function for consistency between standard VBF and VBF+gamma channels
+
+  //return 1 if we found a signal photon
+  //return 0 if no signal photons
+
+  //for now, just return pre-selection
+  //return doVBFPhotonPreSelection(photons, ph);
+
+  ph = nullptr;
+  int nph=0;
+  for (unsigned int iPh=0; iPh<photons->size(); ++iPh){
+    const xAOD::Photon* phot = photons->at(iPh);
+    if(!Props::passOR.get(phot)) continue;
+    // if(phot->pt()<30000) continue;      // in Reader level, tighten pt cut to 30 GeV
+    if(phot->pt()<20000) continue;      // keep 20 GeV for new trigger 
+
+	if( Props::isVBFSignalPhoton.get(phot)){
+	   nph++;
+	   if(ph==0)
+		  ph=phot;
+	   else if(phot->pt() > ph->pt())
+		  ph = phot;
+	}
+  }
+  // todo : veto on more than one photon?
+  return nph;
+
+}
+
+
+
+
+
+
+
+
+template<typename T>
+bool VBFHbbEvtSelection<T>::passTrackJetPreSelection(const xAOD::JetContainer* trackjets) {
+  m_result.trackJets.clear();
+  for (unsigned int iJet(0) ; iJet < trackjets->size(); ++iJet) {
+  const xAOD::Jet * jet = trackjets->at(iJet);
+  
+  if( fabs(jet->eta()) > 2.5) continue;
+  if(jet->pt() < 2000.)  continue;
+  
+  m_result.trackJets.push_back(jet);
+  }
+  return true;
+}
+
+template<typename T>
+bool VBFHbbEvtSelection<T>::passTrackJetSelection(const xAOD::JetContainer* trackjets) { return passTrackJetPreSelection(trackjets); }
+template<typename T>
+bool VBFHbbEvtSelection<T>::passKinematics() { return true; }
+template<typename T>
+void VBFHbbEvtSelection<T>::clearResult() {}

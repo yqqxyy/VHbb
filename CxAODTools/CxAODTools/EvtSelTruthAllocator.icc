@@ -1,0 +1,145 @@
+//dear emacs, this is -*- C++ -*-
+
+#include "CxAODTools/EvtSelTruthAllocator.h"
+#include "CxAODTools/xAODContainerStore.h"
+
+//Object type identifier
+#include <typeinfo>
+
+//xAOD CONTAINER INCLUDES
+#include "xAODEgamma/ElectronContainer.h"
+#include "xAODEgamma/PhotonContainer.h"
+#include "xAODMuon/MuonContainer.h"
+#include "xAODJet/JetContainer.h"
+#include "xAODTau/TauJetContainer.h"
+#include "xAODEventInfo/EventInfo.h"
+#include "xAODMissingET/MissingET.h"
+#include "xAODMissingET/MissingETContainer.h"
+#include "xAODTruth/TruthEventContainer.h"
+
+//Template Method (Master) : Templated definition of TLV extraction for TruthParticle, Electron reco. etc.. types
+template <typename T>
+TLorentzVector EvtSelTruthAllocator::GetTLV( T *Part ){
+  return Part->p4();
+}
+
+//Template Method (Master) : Summarise the element linked truth particles to a RecoObj container
+template<typename T, typename U>
+void EvtSelTruthAllocator::SummariseAllocation( T* RecoObjContainer, std::string LinkName ){
+
+  //Diagnostic print
+  if ( !RecoObjContainer || !m_debug || LinkName == "" ) {
+    return;
+  }
+  Info("SummariseAllocation", "  ########### Summarising Reco <-> Truth Allocation ############");
+  Info("SummariseAllocation", "              Object : %s", typeid(*RecoObjContainer).name());
+  
+  //Loop through RecoObjContainer to extract each unique reco. particle
+  unsigned int count = 0;
+  for( auto RecoObj : *RecoObjContainer ){
+  //for( typename T::value_type RecoObj : *RecoObjContainer ){
+    count++;
+    //Access the truth particle content auto will determine the type from the return function
+    //Check for element link. NOTE:: using TruthMatch property as well due to failure of element linking
+    //check to flag when element link is not valid.
+    if( RecoObj->template isAvailable< ElementLink<U> >(LinkName) && Props::TruthMatch.get( RecoObj ) ){ 
+      Info("SummariseAllocation", "          Reco Obj : %i ##", count);
+      auto truthPart = (*RecoObj->template auxdecor< ElementLink< U > >(LinkName));
+      TLorentzVector TruthVec = GetTLV(truthPart);
+      Info("SummariseAllocation", "              pT = %f", TruthVec.Pt());
+      Info("SummariseAllocation", "              eta = %f", TruthVec.Eta());
+      Info("SummariseAllocation", "              phi = %f", TruthVec.Phi());
+      Info("SummariseAllocation", "              m = %f", TruthVec.M());
+    }
+  }
+}// SummariseAllocation end
+
+//Template Method (Master) : Perform dR matching between Reco. level physics obj. and truth particle.
+template<typename T, typename U> 
+void EvtSelTruthAllocator::RecoTruthAssociation_dR( T* RecoObjContainer, U* TruthObjContainer, std::string LinkName ){
+  
+  if(m_debug) { Info("RecoTruthAssociation_dR", "             Running association for %s", typeid(*RecoObjContainer).name()); }
+
+  //Check for empty containers
+  if( !RecoObjContainer               || !TruthObjContainer 
+      ||!(RecoObjContainer->size() > 0) || !(TruthObjContainer->size() > 0)
+      || LinkName == ""){
+    if(m_debug){ Info("RecoTruthAssociation", "   Reco or Truth container empty, skipping"); }
+    return;
+  }
+
+  //Initialise all Reco/Truth object Props::Reco/TruthMatch decorators to 0
+  //Template types for InitMatchDecorator<A, B>(...) are as follows:
+  //     A = Object Container type which is argument (1)
+  //     B = PROPS<C> typename C, which in this case is an int (Props::RecoMatch<int> etc...)
+  EvtSelTruthAllocator::InitMatchDecorators<T, int>(RecoObjContainer, &Props::TruthMatch);
+  EvtSelTruthAllocator::InitMatchDecorators<U, int>(TruthObjContainer, &Props::RecoMatch);
+
+  //Temporary pointer storage for closest matching truth and reco objects
+  typename U::const_value_type MatchingTruthPart = 0;
+ 
+  //Loop through container and match using dR as criteria
+  if(m_debug){ Info("RecoTruthAssociation_dR", "Performing dR Reco to Truth matching"); }
+  for( auto RecoObj : *RecoObjContainer ) {
+    //Default value for spatial separation
+    float dR = 99;
+    
+    //Loop through truth particles
+    for( auto TruthPart : *TruthObjContainer){
+      
+      TLorentzVector TruthVec = GetTLV(TruthPart);
+      TLorentzVector RecoVec  = GetTLV(RecoObj);
+
+      //Check TLV for 0-magnitude (skip if 0)
+      if( TruthVec.Mag() == 0 || RecoVec.Mag() == 0) continue;
+
+      //Delta R quantity
+      if ( TruthVec.DeltaR(RecoVec ) < dR ) {
+      	dR = TruthVec.DeltaR(RecoVec);
+      	MatchingTruthPart = TruthPart;
+      }
+    }
+    
+    //Following complete check of truth reco now create element link, however if already matched then ignore
+    if(dR != 99 && MatchingTruthPart && Props::RecoMatch.get(MatchingTruthPart) == 0 ){
+      if(m_debug) Info("<RecoTruthAssociation_dR", "  ########### Matched to truth ###########");
+      ElementLink < U > RecoTruthPartLink( MatchingTruthPart, *TruthObjContainer );   //const U ???
+      //std::string LinkName = typeid(*TruthObjContainer).name() == typeid(xAOD::TruthParticleContainer).name() 
+      //	                     ? "TruthPart" : "TruthJet";
+      RecoObj->template auxdecor< ElementLink< U > >(LinkName) = RecoTruthPartLink; //const U ???
+      //Now decorate the Truth Particle as already matched
+      Props::RecoMatch.set( MatchingTruthPart, 1);
+      Props::TruthMatch.set( RecoObj, 1);
+    }
+  }
+}//RecoTruthAssociation End
+
+//Template Method (Master) : Clear all initialise all Props:: decorations
+template<typename T, typename U>
+void EvtSelTruthAllocator::InitMatchDecorators( T* ObjContainer,  PROP<U> *property ){
+
+  if(m_debug){ Info("InitMatchDecorators", "Initialising decorator '%s'", typeid(*property).name() ); }
+
+  //Loop through all reco objects and set Props::RecoMatch = 0
+  for( auto Obj : *ObjContainer){
+    //Assign default no match value
+    //property->set(Obj, 0);
+    (*property).set(Obj, 0);
+  }  
+}
+
+//Template Method (Master) : Check RecoTruthIDMapping for truth particle PDG ID based on passed container type
+template<typename T> 
+int EvtSelTruthAllocator::AllowedTruthPartID( T* RecoObj ){
+  
+  for( auto const& entry : m_RecoTruthIDMapping){
+    //Perform typeid comparison
+    if( entry.second->GetContainerType() == typeid(*RecoObj).name() ){
+      return entry.first;
+    }
+  }
+  
+  //If failed to isolate a valid PDG ID value then return default -1 value
+  return -1;
+  
+}//AllowedTruthPartID End

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# This script is called before compilation of this package.
+# It is used for automatic generation of CxAODTools/Root/CommonProperties.cxx
+
+pwd
+cd ../../
+./CxAODTools/scripts/createPropsCXX.sh CxAODTools CommonProperties
+cd -

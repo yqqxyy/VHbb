@@ -1,0 +1,28 @@
+#include <iostream>
+#include <string>
+#include <vector>
+
+
+/*
+ * This templated version of print is there to avoid compile time errors if new
+ * data types were added to the ConfigField.
+ * You can use it for quick and dirty fixes. However, the better practice is to
+ * implement a proper print overload in ConfigField.cxx.
+ * You can, however, use this to find the required overload, as the missing type
+ * type is demangled and therefore the statement below prints a useful message
+ * to your logs.
+*/
+// template <class T>
+// void ConfigField<T>::print(const std::string &fieldName) const {
+//  int status = 0;
+//  std::string demangled = abi::__cxa_demangle(typeid(m_value).name(),
+//                                              0, 0, &status);
+//  std::cout << (demangled + " " + fieldName +
+//                " = <print is not implemented for type " + demangled +
+//                " in ConfigField.cxx>")
+//                   .c_str()
+//             << std::endl;
+//  std::cout << " ** to turn this into a compile time error, remove the "
+//               "templated print() in ConfigField.icc **"
+//            << std::endl;
+// }

@@ -1,0 +1,17 @@
+<!-- Id$ -->
+<lcgdict>
+
+  <!-- The trigger menu metadata handler tool: -->
+  <class name="LumiMetaDataTool">
+    <field name="m_inputKey" transient="true" />
+    <field name="m_outputKey" transient="true" />
+    <field name="m_md" transient="true" />
+    <field name="m_mdAux" transient="true" />
+    <field name="m_beginFileIncidentSeen" transient="true" />
+  </class>
+
+  <class name="xAOD::OverlapRegister" />
+  <class name="xAOD::OverlapRegisterContainer" />
+  <class name="xAOD::OverlapRegisterAuxContainer" />
+</lcgdict>
+

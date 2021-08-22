@@ -1,0 +1,26 @@
+
+#include "VBFHbbJetAssignment.h"
+#include "CommonProperties_VBFHbb.h"
+
+
+namespace JetSort{
+
+#ifndef SORT_JETS_BY_ETA
+#define SORT_JETS_BY_ETA
+bool sortJetsByEta(xAOD::Jet const*,xAOD::Jet const*);
+#endif
+
+
+#ifndef SORT_JETS_BY_BTAG
+#define SORT_JETS_BY_BTAG
+bool sortJetsByBtag(xAOD::Jet const*, xAOD::Jet const*);
+#endif
+
+
+#ifndef SORT_JETS_BY_PT
+#define SORT_JETS_BY_PT
+bool sortJetsByPt(xAOD::Jet const*, xAOD::Jet const*);
+#endif
+
+}
+

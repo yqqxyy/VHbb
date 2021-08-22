@@ -1,0 +1,67 @@
+// Framework includes
+#include "CxAODTools/CommonProperties.h"
+
+// stl includes
+#include <iterator>
+
+template<typename partContainer> 
+EL::StatusCode OverlapRegisterAccessor::fill(const partContainer * particles, std::vector<unsigned int> & goodParticles)
+{
+
+  // check pointer
+  if ( ! particles ) return EL::StatusCode::SUCCESS;
+
+  // deduce particle type from container type
+  typedef typename partContainer::value_type partTypePtr;
+  typedef typename std::iterator_traits<partTypePtr>::value_type partType;
+  
+  // fill indices to particles which pass overlap removal
+  for (unsigned int i = 0; i < particles->size(); ++i) {
+
+    // get particle
+    const partType * part = particles->at(i);
+
+    // check if 'passOR' decoration exists on particle
+    if ( ! Props::passOR.exists(part) ) {
+      Error("OverlapRegisterAccessor::fill()", "particle does not have decoration 'passOR'");
+      return EL::StatusCode::FAILURE;
+    }
+
+    // collect indices to particles which pass overlap removal
+    if ( Props::passOR.get(part) ) goodParticles.push_back( i );
+
+  }
+  
+  // all okay
+  return EL::StatusCode::SUCCESS;
+  
+}
+
+
+template<typename partContainer> 
+EL::StatusCode OverlapRegisterAccessor::decorate(const partContainer * particles, const std::vector<unsigned int> & goodParticles) const
+{
+
+  // check pointer
+  if ( ! particles ) return EL::StatusCode::SUCCESS;
+
+  // // deduce particle type from container type
+  typedef typename partContainer::value_type partTypePtr;
+  typedef typename std::iterator_traits<partTypePtr>::value_type partType;
+
+  // // get indices to particles 
+  for (const partType * part : *particles) {
+ 
+    // set default value to 'not pass' overlap removal
+    Props::passOR.set( part , 0 );
+    
+    // look for particle index 'partIndex' among good particles
+    unsigned int index = static_cast<unsigned int>( Props::partIndex.get( part ) );
+    if ( std::find( goodParticles.begin() , goodParticles.end() , index ) != goodParticles.end() ) Props::passOR.set( part , 1 );
+    
+  }
+  
+  // all okay
+  return EL::StatusCode::SUCCESS;
+  
+}

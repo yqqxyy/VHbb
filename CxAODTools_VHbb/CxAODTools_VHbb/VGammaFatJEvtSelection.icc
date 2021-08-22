@@ -1,0 +1,292 @@
+// dear emacs, this is -*- C++ -*-
+#include "xAODJet/Jet.h"
+#include "xAODEventInfo/EventInfo.h"
+//
+#include <utility>
+
+template<typename T>
+VGammaFatJEvtSelection<T>::VGammaFatJEvtSelection() noexcept :
+EventSelection(),
+  m_result()
+{
+}
+
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passSelection(SelectionContainers & containers, bool /*isKinVar*/) {
+
+  const xAOD::JetContainer    * fatjets     = containers.fatjets;
+  const xAOD::JetContainer    * trackjets   = containers.trackjets;
+  const xAOD::JetContainer    * jets        = containers.jets;
+  const xAOD::PhotonContainer * photons     = containers.photons;
+  //const xAOD::EventInfo     * evtinfo     = containers.evtinfo;
+
+  // assume that T has a field bool pass
+  clearResult();
+  if ( fatjets ) {
+    if(! passFatJetSelection(fatjets)) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+  
+  if ( photons ) {
+    if(! passPhotonSelection(photons)) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+  /*
+  if ( evtinfo ) {
+    if(! passTriggerSelection(evtinfo) ) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+  */
+  if(! passKinematics()) {
+    m_result.pass = false;
+    return false;
+  }
+
+  // not used for selection
+  if (trackjets){
+    passTrackJetSelection(trackjets);
+  }
+
+  if (jets) {
+    passJetSelection(jets);
+  }
+
+  m_result.pass = true;
+  return true;
+  
+}
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passPreSelection(SelectionContainers & containers, bool /*isKinVar*/) {
+
+  const xAOD::EventInfo       * evtinfo   = containers.evtinfo;
+  const xAOD::PhotonContainer * photons   = containers.photons;
+  const xAOD::JetContainer    * fatjets   = containers.fatjets;
+  const xAOD::JetContainer    * jets      = containers.jets;
+  const xAOD::JetContainer    * trackjets = containers.trackjets;
+  // assume that T has a field bool pass
+  clearResult();
+
+  //todo : implement cut flow
+
+  // event cleaning
+  bool passEventCleaning = true;
+  if ( evtinfo ) {
+    bool isMC = Props::isMC.get(evtinfo);
+    passEventCleaning &= Props::hasPV.get(evtinfo);
+    if (!isMC) {
+      passEventCleaning &= Props::passGRL.get(evtinfo);
+      passEventCleaning &= Props::isCleanEvent.get(evtinfo);
+    }
+
+    if(!passEventCleaning) return false;
+
+  }
+
+  // photons
+  if ( photons ) {
+    if(! passPhotonPreSelection(photons)) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+
+  // fatjets
+  if ( fatjets ) {
+    if(! passFatJetPreSelection(fatjets)) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+
+  /*
+  // Trigger to be implemented
+  if(! passTriggerPreSelection(evtinfo)) {
+    m_result.pass = false;
+    return false;
+  }
+  */
+  // not used for selection
+  if (trackjets){
+    passTrackJetPreSelection(trackjets);
+  }
+
+  if (jets) {
+    passJetPreSelection(jets);
+  }
+
+  m_result.pass = true;
+  return true;
+
+}
+/*
+// Pre-selection versions
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passTriggerPreSelection(const xAOD::EventInfo* evtinfo) {
+
+  return true;
+}
+*/
+  
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passFatJetPreSelection(const xAOD::JetContainer* fatjets) {
+  // assume that T has a field vector<Jet*> fatJets
+  m_result.fatJets.clear();
+
+  // allow to run w/o fat jets
+  if (!fatjets) {
+    return true;
+  }
+
+  for (unsigned int iJet(0) ; iJet < fatjets->size(); ++iJet) {
+    const xAOD::Jet * fatjet = fatjets->at(iJet);
+    // require isFatJet flag
+    if (Props::isFatJet.get(fatjet)){//pT > 200 GeV; |eta| < 2.5
+      m_result.fatJets.push_back(fatjet);
+    }
+  }
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.fatJets.begin(), m_result.fatJets.end(), sort_pt);
+  std::reverse(m_result.fatJets.begin(), m_result.fatJets.end());
+
+  // Require >=1 fat jets.
+  return (m_result.fatJets.size() >= 1);
+
+}
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passTrackJetPreSelection(const xAOD::JetContainer* trackjets)
+{
+  m_result.trackJets.clear();
+  for (unsigned int iJet(0) ; iJet < trackjets->size(); ++iJet) {
+  const xAOD::Jet * jet = trackjets->at(iJet);
+  
+  if( fabs(jet->eta()) > 2.5) continue;
+  
+  if(jet->pt() < 2000.)  continue;
+
+  m_result.trackJets.push_back(jet);
+  }
+  return true;
+
+}
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passTrackJetSelection(const xAOD::JetContainer* trackjets)
+{
+  // Have to be sure to have tighter selection than pre-selection.
+  // selection according to https://twiki.cern.ch/twiki/bin/view/AtlasProtected/VhResonances2015#Track_jets_and_b_tagging
+  // assume that T has a field vector<Jet*> trackJets
+  m_result.trackJets.clear();
+  // allow to run w/o track jets
+  if (!trackjets) {
+    return true;
+  }
+
+  for (unsigned int iJet(0) ; iJet < trackjets->size(); ++iJet) {
+    const xAOD::Jet * jet = trackjets->at(iJet);
+    if (!(Props::isTrackJet.get(jet))) continue; //pT > 7 GeV; |eta| < 2.5
+    if (!(jet->pt() > 10e3)) continue; 
+    if ( Props::TrkJetnumConstituents.exists(jet) ){
+      if ( !(Props::TrkJetnumConstituents.get(jet) >= 2) ) continue;
+    }
+
+    m_result.trackJets.push_back(jet);
+  }
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.trackJets.begin(), m_result.trackJets.end(), sort_pt);
+  std::reverse(m_result.trackJets.begin(), m_result.trackJets.end());
+  // Require >=1 track jets. - bool is currently not used 
+  return (m_result.trackJets.size() >= 1);
+
+  //return passTrackJetPreSelection(trackjets);
+}
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passPhotonPreSelection(const xAOD::PhotonContainer* photons)
+{
+  return doVGammaFatJPhotonPreSelection(photons);
+}
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passJetSelection(const xAOD::JetContainer* jets) 
+{
+  return passJetPreSelection(jets);
+}
+
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passJetPreSelection(const xAOD::JetContainer* jets) {
+  // assume that T has fields vector<Jet*> signalJets, forwardJets
+  m_result.jets4.clear();
+  // look at signal jets, veto jets
+  // if pass VH jets selection fill T.jets and return true
+  // fill T.jets in decreasing pT order
+  // else return false
+  for (unsigned int iJet(0) ; iJet < jets->size(); ++iJet) {
+    const xAOD::Jet * jet = jets->at(iJet);
+
+    //TODO Check correctness of this selection
+    if (!Props::goodJet.get(jet)) continue; //Loop only on good jets
+
+    if (!Props::passOR.get(jet)) continue;
+    if (!Props::isVetoJet.get(jet)) continue; // applied to keep CxAOD jets already
+    m_result.jets4.push_back(jet);
+  }
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.jets4.begin(), m_result.jets4.end(), sort_pt);
+  std::reverse(m_result.jets4.begin(), m_result.jets4.end());
+
+  return (m_result.jets4.size());
+
+}
+
+template<typename T>
+int VGammaFatJEvtSelection<T>::doVGammaFatJPhotonSelection(const xAOD::PhotonContainer* photons){
+  //one function for consistency between standard VBF and VBF+gamma channels
+
+  //return 1 if we found a signal photon
+  //return 0 if no signal photons
+
+  //for now, just return pre-selection
+  return doVGammaFatJPhotonPreSelection(photons);
+
+}
+
+
+template<typename T>
+int VGammaFatJEvtSelection<T>::doVGammaFatJPhotonPreSelection(const xAOD::PhotonContainer* photons){
+  //one function for consistency between standard VBF and VBF+gamma channels
+  //return 1 if we found a signal photon
+  //return 0 if no signal photons
+  // how to treat cases where there is more than 1 photon?
+  m_result.ph.clear();
+  for (unsigned int iPh=0; iPh<photons->size(); ++iPh){
+    const xAOD::Photon* phot = photons->at(iPh);
+    if(!Props::passOR.get(phot)) continue;
+    if(!Props::isVBFSignalPhoton.get(phot)) continue;
+    m_result.ph.push_back(phot);
+  }
+  std::sort(m_result.ph.begin(), m_result.ph.end(), sortPhotons_pt);
+  std::reverse(m_result.ph.begin(), m_result.ph.end());
+  // todo : veto on more than one photon?
+  return (m_result.ph.size());
+}
+
+
+//
+template<typename T>
+bool VGammaFatJEvtSelection<T>::passKinematics() {
+  return true;
+}
+
+template<typename T>
+void VGammaFatJEvtSelection<T>::clearResult() {
+}

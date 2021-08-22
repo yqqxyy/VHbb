@@ -1,0 +1,585 @@
+//dear emacs, this is -*- C++ -*-
+#include "xAODEgamma/Electron.h"
+#include "xAODMuon/Muon.h"
+#include "xAODJet/Jet.h"
+#include "xAODTau/TauJet.h"
+#include "xAODEventInfo/EventInfo.h"
+//
+#include <utility>
+
+template<typename T>
+VHbbEvtSelection<T>::VHbbEvtSelection() noexcept :
+  EventSelection(),
+  m_result(),
+  m_RecoTruthLinker(false)
+{}
+
+template<typename T>
+VHbbEvtSelection<T>::VHbbEvtSelection(ConfigStore* config) noexcept :
+  EventSelection(config),
+  m_result(),
+  m_RecoTruthLinker(false)
+{}
+
+template<typename T>
+bool VHbbEvtSelection<T>::passFatJetSelection(const xAOD::JetContainer* jets) {
+  // Have to be sure to have tighter selection than pre-selection.
+  //selection according to https://twiki.cern.ch/twiki/bin/view/AtlasProtected/VhResonances2015#Large_R_jets
+
+  // assume that T has a field vector<Jet*> fatJets
+  m_result.fatJets.clear();
+
+  // allow to run w/o fat jets
+  if (!jets) {
+    return true;
+  }
+
+  for (unsigned int iJet(0) ; iJet < jets->size(); ++iJet) {
+    const xAOD::Jet * jet = jets->at(iJet);
+    // require isFatJet flag
+    if(!Props::isFatJet.get(jet)) continue; //pT > 200 GeV; |eta| < 2.0
+    if(!Props::passOR.get(jet)) continue;
+    if(!(jet->pt() > 250e3)) continue; 
+
+    m_result.fatJets.push_back(jet);
+  }
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.fatJets.begin(), m_result.fatJets.end(), sort_pt);
+
+  // Require >=1 fat jets.
+  return (m_result.fatJets.size() >= 1);
+}
+
+template<typename T>
+bool VHbbEvtSelection<T>::passTrackJetSelection(const xAOD::JetContainer* jets) {
+  // Have to be sure to have tighter selection than pre-selection.
+  //selection according to https://twiki.cern.ch/twiki/bin/view/AtlasProtected/VhResonances2015#Track_jets_and_b_tagging
+
+  // assume that T has a field vector<Jet*> trackJets
+  m_result.trackJets.clear();
+
+  // allow to run w/o track jets
+  if (!jets) {
+    return true;
+  }
+
+  for (unsigned int iJet(0) ; iJet < jets->size(); ++iJet) {
+    const xAOD::Jet * jet = jets->at(iJet);
+    if (!(Props::isTrackJet.get(jet))) continue; //pT > 7 GeV; |eta| < 2.5
+    if (!(jet->pt() > 10e3)) continue; 
+    if ( Props::TrkJetnumConstituents.exists(jet) ){
+      if (!(Props::TrkJetnumConstituents.get(jet) >= 2)) continue;
+    }
+    
+    m_result.trackJets.push_back(jet);
+  }
+
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.trackJets.begin(), m_result.trackJets.end(), sort_pt);
+
+  // Require >=1 track jets. - bool is currently not used 
+  return (m_result.trackJets.size() >= 1);
+}
+
+template<typename T>
+bool VHbbEvtSelection<T>::passCoMJetSelection(const xAOD::JetContainer* jets){
+  
+  // CoM subjets are stored in the subjet collection
+  // CoM info can be found in: https://cds.cern.ch/record/2634085? 
+  //Assume that T has the member field std::vector<Jet*> subJets
+  m_result.subJets.clear();
+
+  //Protection incase jet collection is not in CxAOD
+  if(!jets){
+    return true; //Return true and empty jet collection
+  }
+
+  for( unsigned int iJet = 0; iJet < jets->size(); ++iJet ){
+    const xAOD::Jet * jet = jets->at(iJet);
+    //Apply jet selection
+    //VOID FOR NOW (pass all jets)
+    m_result.subJets.push_back(jet);
+  }
+  
+  //pT sort CoM jets
+  std::sort(m_result.subJets.begin(), m_result.subJets.end(), sort_pt);
+
+  //return bool true when 2 or more CoM are present (ExCom2SubJet collection requires this)
+  return (m_result.subJets.size() >= 2);
+
+}
+
+
+// to be implemented here
+template<typename T>
+bool VHbbEvtSelection<T>::passJetSelection(const xAOD::JetContainer* jets) {
+  // look at signal jets, veto jets
+  // if pass VH jets selection fill T.jets and return true
+  // fill T.jets in decreasing pT order
+  // else return false
+
+  // Have to be sure to have tighter selection than pre-selection.
+  // This is the same as the jet pre-selection for the time-being
+  return passJetPreSelection(jets);
+
+}
+
+// to be implemented here
+template<typename T>
+int VHbbEvtSelection<T>::doVHLeptonSelection(const xAOD::ElectronContainer* electrons,
+                                             const xAOD::MuonContainer* muons,
+                                             const xAOD::Electron*& el1, const xAOD::Electron*& el2,
+                                             const xAOD::Muon*& mu1, const xAOD::Muon*& mu2) {
+  // one function for lepton selection to ensure consistency between 0/1/2 lepton channels
+  // try to write it so that if one changes some cut for some channel, the other channels cannot become
+  // overlapping/inconsistent
+
+  // if no loose lepton, set el1, el2, mu1, mu2 to nullptr and return 0
+  // if 1 tight 0 loose, set el1 or mu1 to the tight lepton, el2 and mu2 to nullptr
+  // and return 1
+  // if 1 medium + 1 loose, set el1 and el2 or mu1 and mu2 to the leptons, set the others to
+  // nullptr, and return 2
+
+  //  This is the same as the Lepton pre-selection for the time-being
+  return doVHLeptonPreSelection(electrons, muons, el1, el2, mu1, mu2);
+
+}
+
+template<typename T>
+bool VHbbEvtSelection<T>::passTauSelection(const xAOD::TauJetContainer* taus) {
+  // look at taus
+  // if pass VH tau selection fill T.jets and return true
+  // fill T.jets in decreasing pT order
+  // else return false
+
+  // Have to be sure to have tighter selection than pre-selection.
+  // This is the same as the tau pre-selection for the time-being
+  return passTauPreSelection(taus);
+}
+
+template<typename T>
+bool VHbbEvtSelection<T>::passSelection(SelectionContainers & containers, bool /*isKinVar*/) {
+
+  const xAOD::EventInfo         * evtinfo   = containers.evtinfo;
+  const xAOD::MissingET         * met       = containers.met;
+  const xAOD::ElectronContainer * electrons = containers.electrons;
+  const xAOD::MuonContainer     * muons     = containers.muons;
+  const xAOD::TauJetContainer   * taus      = containers.taus;
+  const xAOD::JetContainer      * jets      = containers.jets;
+  const xAOD::JetContainer      * fatjets   = containers.fatjets;
+  const xAOD::JetContainer      * trackjets = containers.trackjets;
+  const xAOD::JetContainer      * subjets = containers.subjets;
+
+  // assume that T has a field bool pass
+  clearResult();
+
+  // bad jet cleaning: recommendation is to kill the event
+  if(!passJetCleaning(jets,evtinfo)) return false;
+  
+
+  if ( electrons && muons && met ) {
+    if(! passLeptonSelection(electrons, muons, met)) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+  //taus -  not used for decision
+  if( taus ){
+    passTauSelection(taus);
+  }
+  
+  // jets
+  bool passJetSel = true;
+  bool passFatJetSel = true;
+  if ( jets ) {
+    passJetSel &= passJetSelection(jets);
+  }
+  if ( fatjets ) {
+    passFatJetSel &= passFatJetSelection(fatjets);
+  }
+  //not used for decision
+  if( trackjets ) {
+    passTrackJetSelection(trackjets);
+  }
+
+ //not used for decision
+  if( subjets ) {
+    passCoMJetSelection(subjets);
+  }
+  
+  if ( jets || fatjets ) {
+    if(!passJetSel && !passFatJetSel ){
+      m_result.pass = false;
+      return false;
+    }
+  }
+  //kinematics
+  if(! passKinematics()) {
+    m_result.pass = false;
+    return false;
+  }
+  m_result.pass = true;
+  return true;
+
+}
+
+// Pre-selection versions
+template<typename T>
+bool VHbbEvtSelection<T>::passFatJetPreSelection(const xAOD::JetContainer* jets) {
+  // assume that T has a field vector<Jet*> fatJets
+  m_result.fatJets.clear();
+
+  // allow to run w/o fat jets
+  if (!jets) {
+    return true;
+  }
+
+  for (unsigned int iJet(0) ; iJet < jets->size(); ++iJet) {
+    const xAOD::Jet * jet = jets->at(iJet);
+    // require isFatJet flag
+    if (Props::isFatJet.get(jet)){//pT > 200 GeV; |eta| < 2.5
+      m_result.fatJets.push_back(jet);
+    }
+  }
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.fatJets.begin(), m_result.fatJets.end(), sort_pt);
+
+  // Require >=1 fat jets.
+  return (m_result.fatJets.size() >= 1);
+}
+
+
+// Pre-selection versions
+template<typename T>
+bool VHbbEvtSelection<T>::passTrackJetPreSelection(const xAOD::JetContainer* jets) {
+  // assume that T has a field vector<Jet*> trackJets
+  m_result.trackJets.clear();
+
+  // allow to run w/o track jets
+  if (!jets) {
+    return true;
+  }
+
+  for (unsigned int iJet(0) ; iJet < jets->size(); ++iJet) {
+    const xAOD::Jet * jet = jets->at(iJet);
+    if (Props::isTrackJet.get(jet)){ //pT > 7 GeV; |eta| < 2.5
+      m_result.trackJets.push_back(jet);
+    }
+  }
+
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.trackJets.begin(), m_result.trackJets.end(), sort_pt);
+
+  // Require >=1 track jets.
+  return (m_result.trackJets.size() >= 1);
+}
+
+// Pre-selection versions
+template<typename T>
+bool VHbbEvtSelection<T>::passJetPreSelection(const xAOD::JetContainer* jets) {
+  // assume that T has fields vector<Jet*> signalJets, forwardJets
+  m_result.signalJets.clear();
+  m_result.forwardJets.clear();
+  // look at signal jets, veto jets
+  // if pass VH jets selection fill T.jets and return true
+  // fill T.jets in decreasing pT order
+  // else return false
+  int nSignalJets = 0;
+  for (unsigned int iJet(0) ; iJet < jets->size(); ++iJet) {
+    const xAOD::Jet * jet = jets->at(iJet);
+
+    //TODO Check correctness of this selection
+    if (!Props::goodJet.get(jet)) continue; //Loop only on good jets
+
+    if (!Props::passOR.get(jet)) continue; 
+    if (Props::isVetoJet.get(jet)) { // applied to keep CxAOD jets already
+      if (Props::isSignalJet.get(jet)) {
+        nSignalJets++;
+        m_result.signalJets.push_back(jet);
+      } else {
+        m_result.forwardJets.push_back(jet);
+      }
+    }
+  }
+  // cannot rely on jets being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.signalJets.begin(), m_result.signalJets.end(), sort_pt);
+  std::sort(m_result.forwardJets.begin(), m_result.forwardJets.end(), sort_pt);
+
+  // be more inclusive for the first CxAOD production with no syst to test better, including QCD in 1L
+  // Require >=1 signal jets. 
+  //return (nSignalJets >= 1);
+
+  // Require >=2 signal jets.
+  return (nSignalJets >= 2);
+
+}
+
+template<typename T>
+int VHbbEvtSelection<T>::doVHLeptonPreSelection(const xAOD::ElectronContainer* electrons,
+                                                const xAOD::MuonContainer* muons,
+                                                const xAOD::Electron*& el1, const xAOD::Electron*& el2,
+                                                const xAOD::Muon*& mu1, const xAOD::Muon*& mu2) {
+  // one function for lepton selection to ensure consistency between 0/1/2 lepton channels
+  // try to write it so that if one changes some cut for some channel, the other channels cannot become
+  // overlapping/inconsistent
+
+  // if no loose lepton, set el1, el2, mu1, mu2 to nullptr and return 0
+  // if 1 tight 0 loose, set el1 or mu1 to the tight lepton, el2 and mu2 to nullptr
+  // and return 1
+  // if 1 medium + 1 loose, set el1 and el2 or mu1 and mu2 to the leptons, set the others to
+  // nullptr, and return 2
+  // else, return -1
+
+
+  //
+  el1=nullptr;
+  el2=nullptr;
+  mu1=nullptr;
+  mu2=nullptr;
+  int nelecs=0;
+  int nmuons=0;
+  int nelecsSigZH=0;
+  int nmuonsSigZH=0;
+  int nelecsSigWH=0;
+  int nmuonsSigWH=0;
+  for (unsigned int iElec = 0; iElec < electrons->size(); ++iElec) {
+    const xAOD::Electron * elec = electrons->at(iElec);
+    if (!Props::passOR.get(elec)) continue;
+    if (Props::isVHLooseElectron.get(elec)) {
+      nelecs++;
+      if (el1==0)
+        el1=elec;
+      else if (el2==0)
+        el2=elec;
+    }
+    if (Props::isZHSignalElectron.get(elec)) nelecsSigZH++;
+    if (Props::isWHSignalElectron.get(elec)) nelecsSigWH++;
+  }
+
+  for (unsigned int iMuon = 0; iMuon < muons->size(); ++iMuon) {
+    const xAOD::Muon * muon = muons->at(iMuon);
+    if (!Props::passOR.get(muon)) continue;
+    if (Props::isVHLooseMuon.get(muon)) {
+      nmuons++;
+      if (mu1==0)
+        mu1=muon;
+      else if (mu2==0)
+        mu2=muon;
+    }
+    if (Props::isZHSignalMuon.get(muon)) nmuonsSigZH++;
+    if (Props::isWHSignalMuon.get(muon)) nmuonsSigWH++;
+  }
+
+  if (nelecs+nmuons == 0){
+    return 0;
+  }
+  else if (nelecs+nmuons==1 && nelecsSigWH+nmuonsSigWH ==1) {
+    return 1;
+  }
+  else if (nelecs+nmuons==2 && nelecsSigZH+nmuonsSigZH >=1) {
+    if (mu1&&mu2&&mu1->pt() < mu2->pt()) {
+      std::swap(mu1, mu2);
+    }
+    if (el1&&el2&&el1->pt() < el2->pt()) {
+      std::swap(el1, el2);
+    }
+    return 2;
+  }
+  return -1;
+
+}
+
+
+template<typename T>
+bool VHbbEvtSelection<T>::passTauPreSelection(const xAOD::TauJetContainer* taus) {
+  // assume that T has fields vector<TauJet*> taus
+  m_result.taus.clear();
+  // if pass VH tau pre-selection fill T.taus and return true
+  // fill T.taus in decreasing pT order
+  // else return false
+  
+  for (unsigned int iTau(0) ; iTau < taus->size(); ++iTau) {
+    const xAOD::TauJet * tau = taus->at(iTau);
+    if (!Props::passTauSelector.get(tau)) continue;
+    if (!Props::passOR.get(tau)) continue;
+    m_result.taus.push_back(tau);
+  }
+  
+  // cannot rely on taus being pt sorted since all variations have same order in CxAOD
+  std::sort(m_result.taus.begin(), m_result.taus.end(), sortTaus_pt);
+  
+  //the return value is currently ignored
+  return (m_result.taus.size() >= 1);
+
+}
+
+template<typename T>
+bool VHbbEvtSelection<T>::passPreSelection(SelectionContainers & containers, bool isKinVar) {
+  
+  const xAOD::EventInfo         * evtinfo    = containers.evtinfo;
+  const xAOD::MissingET         * met        = containers.met;
+  const xAOD::MissingET         * TruthMET   = containers.TruthMET;  (void)TruthMET; //Silence unused variable warnings
+  const xAOD::ElectronContainer * electrons  = containers.electrons;
+  const xAOD::MuonContainer     * muons      = containers.muons;
+  //const xAOD::PhotonContainer     * photons      = containers.photons;
+  const xAOD::TauJetContainer   * taus       = containers.taus;
+  const xAOD::JetContainer      * jets       = containers.jets;
+  const xAOD::JetContainer      * fatjets    = containers.fatjets;
+  const xAOD::JetContainer      * trackjets  = containers.trackjets;
+  const xAOD::JetContainer      * subjets = containers.subjets;
+  const xAOD::TruthParticleContainer * truth = containers.truthParticles; (void)truth; //Silence unused variable warnings
+  const xAOD::TruthParticleContainer * truthElectrons = containers.truthElectrons;
+  const xAOD::TruthParticleContainer * truthMuons = containers.truthMuons;
+  const xAOD::TruthParticleContainer * truthTaus = containers.truthTaus;  (void)truthTaus;  //Squash compiler warnings for unused variable. Variable needed by derived packages.
+  const xAOD::TruthParticleContainer * truthNeutrinos = containers.truthNeutrinos; (void)truthNeutrinos; //Silence unused variable warnings
+  const xAOD::JetContainer * truthWZJets = containers.truthAntiKt4TruthWZJets;  (void)truthWZJets; //Silence unused variable warnings
+  					   
+  // assume that T has a field bool pass
+  clearResult();
+  if(!isKinVar){
+    m_cutFlow.count("Preselection initial", 100);
+  }
+
+  // event cleaning
+  if ( evtinfo ) {
+    bool isMC = Props::isMC.get(evtinfo);   
+    // C1: Pass GRL
+    if ( !isMC && !Props::passGRL.get(evtinfo) ) return false;
+    if ( !isKinVar ) m_cutFlow.count("Preselection GRL", 101); 
+    
+    // C2: has PV
+    if ( !Props::hasPV.get(evtinfo) ) return false;
+    if ( !isKinVar ) m_cutFlow.count("Preselection hasPV", 102); 
+
+    // C3: is clean event
+    if ( !isMC && !Props::isCleanEvent.get(evtinfo) ) return false;
+    if ( !isKinVar ) m_cutFlow.count("Preselection isCleanEvent", 103);
+  }
+
+  // C4: bad jet cleaning: recommendation is to kill the event
+  if(!passJetCleaning(jets,evtinfo)) return false;
+
+  if(!isKinVar){
+    m_cutFlow.count("Preselection jet cleaning", 104); 
+  }
+
+  // leptons
+  if (electrons && muons && met ) {
+    if(! passLeptonPreSelection(electrons, muons, met)) {
+      m_result.pass = false;
+      return false;
+    }
+  }
+  
+  //taus -  not used for decision
+  if( taus ){
+    passTauSelection(taus);
+  }  
+
+  //truth - not used for decision but passed for matching later 
+  //Deprecated for version 32-06 onwards of CxAODMaker
+  //passTruthParticlePreSelection(truth, m_result.truthParticles);
+
+  //Truth Electrons
+  passTruthParticlePreSelection(truthElectrons, &m_result.truthElectrons);
+  m_RecoTruthLinker.EvtSelTruthAllocator::RecoTruthAssociation_dR< const xAOD::ElectronContainer, const xAOD::TruthParticleContainer >(electrons, truthElectrons, m_RecoToTruthLinkName );
+  m_RecoTruthLinker.EvtSelTruthAllocator::SummariseAllocation< const xAOD::ElectronContainer, const xAOD::TruthParticleContainer >(electrons, m_RecoToTruthLinkName);
+  
+  //Truth Muons
+  passTruthParticlePreSelection(truthMuons, &m_result.truthMuons);
+  m_RecoTruthLinker.EvtSelTruthAllocator::RecoTruthAssociation_dR< const xAOD::MuonContainer, const xAOD::TruthParticleContainer >(muons, truthMuons, m_RecoToTruthLinkName );
+  m_RecoTruthLinker.EvtSelTruthAllocator::SummariseAllocation< const xAOD::MuonContainer, const xAOD::TruthParticleContainer >(muons, m_RecoToTruthLinkName);
+
+  //Truth Taus
+  //passTruthParticlePreSelection(truthTaus, &m_result.truthTaus);
+  //m_RecoTruthLinker.EvtSelTruthAllocator::RecoTruthAssociation_dR< const xAOD::TauJetContainer, const xAOD::TruthParticleContainer >(taus, truthTaus, m_RecoToTruthLinkName);
+  //m_RecoTruthLinker.EvtSelTruthAllocator::SummariseAllocation< const xAOD::TauJetContainer, const xAOD::TruthParticleContainer >(taus, m_RecoToTruthLinkName);
+  
+  //Truth Photons  - NEEDS Container and m_result structure data members before it will work
+  //passTruthParticlePreSelection(truthPhoton, &m_result.truthPhotons);
+  //m_RecoTruthLinker.EvtSelTruthAllocator::RecoTruthAssociation_dR< const xAOD::PhotonContainer, const xAOD::TruthParticleContainer >(photons, truth, m_RecoToTruthLinkName );
+  //m_RecoTruthLinker.EvtSelTruthAllocator::SummariseAllocation< const xAOD::PhotonContainer, const xAOD::TruthParticleContainer >(photons, m_RecoToTruthLinkName);
+  
+  //Truth AntikT4 Jets
+  //m_RecoTruthLinker.EvtSelTruthAllocator::RecoTruthAssociation_dR< const xAOD::JetContainer, const xAOD::JetContainer >(jets, truthWZJets, "TruthJet" );
+  //m_RecoTruthLinker.EvtSelTruthAllocator::SummariseAllocation< const xAOD::JetContainer, const xAOD::JetContainer >(jets, "TruthJets");
+  
+  //Truth MET
+  //passTruthParticlePreSelection(truthNeutrinos, &m_result.truthNeutrinos);
+  //m_RecoTruthLinker.EvtSelTruthAllocator::RecoTruthAssociation_dR< const xAOD::MissingET, const xAOD::TruthParticleContainer >(TruthMET, truthNeutrinos, m_RecoToTruthLinkName);
+  //m_RecoTruthLinker.EvtSelTruthAllocator::SummariseAllocation< const xAOD::MissingET, const xAOD::TruthParticleContainer >(TruthMET, m_RecoToTruthLinkName);
+  
+  if(!isKinVar){
+    m_cutFlow.count("Preselection lepton", 105);
+  }
+
+  // jets
+  bool passJetSel = true;
+  bool passFatJetSel = true;
+  if ( jets ) {
+    passJetSel &= passJetPreSelection(jets);
+    if ( passJetSel && !isKinVar ) m_cutFlow.count("Preselection jet", 106);
+  }
+  if ( fatjets ) {
+    passFatJetSel &= passFatJetPreSelection(fatjets);
+    if ( passFatJetSel && !isKinVar ) m_cutFlow.count("Preselection fatjet", 107);
+  }
+  //not used for decision
+  if( trackjets ) {
+    passTrackJetPreSelection(trackjets);
+  }
+
+ //not used for decision
+  if( subjets ) {
+    passCoMJetSelection(subjets);
+  }
+ 
+  if ( !passJetSel && !passFatJetSel ) {
+    m_result.pass = false;
+    return false;
+  }
+  
+  
+  if(!isKinVar){
+    m_cutFlow.count("Preselection jet OR fat-jet", 108);
+  }
+  // Trigger to be implemented
+  // if(! passTriggerPreSelection()) {
+  //  m_result.pass = false;
+  //  return false;
+  //  }
+  m_result.pass = true;
+  return true;
+
+}
+
+//Truth particle selection (essentially passes truth particles to 0/1/2-lepton )
+template<typename T>
+bool VHbbEvtSelection<T>::passTruthParticlePreSelection(const xAOD::TruthParticleContainer* truth, std::vector< const xAOD::TruthParticle*> *result){
+
+  if( !truth ){
+    return true;
+  }
+  //Iteratively loop through truth particles and load into VHbbXlepEvtSelection:: classes
+  for (unsigned int iTruth(0) ; iTruth < truth->size(); ++iTruth) {
+    //Extract particle
+    const xAOD::TruthParticle * particle = truth->at(iTruth);
+    
+    //Load particle into result output
+    result->push_back(particle);
+  }
+
+  //Return trivial true for success of loading
+  return true;
+}
+
+
+//
+template<typename T>
+bool VHbbEvtSelection<T>::passKinematics() {
+  return true;
+}
+
+template<typename T>
+void VHbbEvtSelection<T>::clearResult() {
+}

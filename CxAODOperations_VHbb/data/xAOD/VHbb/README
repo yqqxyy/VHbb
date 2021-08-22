@@ -1,0 +1,6 @@
+Updates:
+ - 2018.12.10: lists have been generated in Dec. 10th, 2018.
+ - 2019.01.09: lists are updated by adding Zvv (BVeto) samples in Jan. 9th, 2019.
+ - 2019.02.01: lists are updated by add systematic samples, and samples available after last updates
+ - 2019.02.04: correct names in OLD name convention files: "recon"->"merge", addeding merge release (one extra r-tag in the end).
+ - 2019.02.06: removed obsolete and duplicate samples, and added few missing samples (Thanks to Tatsuya for spotting out those samples)
