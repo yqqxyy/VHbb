@@ -72,7 +72,6 @@ EL::StatusCode AnalysisReader_VHbb1Lep::run_1Lep_analysis() {
 
 //added by wym
 EL::StatusCode AnalysisReader_VHbb1Lep::fill_VBF (){
-  int a=1;
 
   //EL_CHECK("fill_VBF ()", fill_VBFCutFlow("All"));
 
