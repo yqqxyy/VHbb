@@ -1,0 +1,108 @@
+#include <utility>
+
+#include <iostream>
+
+template <typename RegNaming>
+template <class... ArgTypes>
+void HistFastSvc<RegNaming>::FillAccordingTo(const HistoVec& tplte,
+                                             ArgTypes... args) {
+  //first, make sure we are pointing to the right place
+  UpdateCurrent();
+  if (m_fillWeightSysts) {
+    UpdateCurrentWeightSysts();
+  }
+
+  int regCode = RegNaming::regCode(args...);
+  // then, find if histos have been defined for this category
+  // if not, we need to remember the region name
+  if (!m_current->count(regCode)) {
+    m_regnames[m_syst][m_sample][regCode] = RegNaming::regName(args...);
+  }
+  // Do the same thing for weight systs, if defined
+  if (m_fillWeightSysts) {
+    unsigned int s = m_weightSysts.size();
+    for (unsigned int i = 0; i < s; i++) {
+      if (!(m_currentWeightSysts[i].first)->count(regCode)) {
+        m_regnames[m_weightSysts[i].first][m_sample][regCode] =
+            RegNaming::regName(args...);
+      }
+    }
+  }
+
+  // Now, fill !
+  FillSystAccordingTo(tplte, m_current, regCode);
+  if (m_fillWeightSysts) {
+    for (auto& syst : m_currentWeightSysts) {
+      FillSystAccordingTo(tplte, syst.first, regCode, syst.second);
+    }
+  }
+}
+
+template <typename RegNaming>
+void HistFastSvc<RegNaming>::FillSystAccordingTo(const HistoVec& tplte,
+                                                 HistosForSample* hists,
+                                                 int regCode,
+                                                 double additional_w) {
+  HistosForRegion& regHists = (*hists)[regCode];
+
+  // now, have the histos described by the template provided been already defined ?
+  auto posHV = regHists.find(&tplte);
+  // if not, add them as a copy of the template
+  if (posHV == regHists.end()) {
+    auto res = regHists.emplace(&tplte, HistoVec(tplte));
+    posHV = res.first;
+    // std::cout << "We have copied " << posHV->second.size() << " histos" << std::endl;
+  }
+
+  // hey, now we can fill the histograms !
+  FillHistos(posHV->second, additional_w);
+}
+
+template <typename RegNaming>
+void HistFastSvc<RegNaming>::Write(TFile* file) {
+  for (auto& sys : m_storage) {
+    for (auto& sample : sys.second) {
+      for (auto& reg : sample.second) {
+        const std::string& regName =
+            m_regnames[sys.first][sample.first][reg.first];
+        for (auto& tplt : reg.second) {
+          for (auto& histo : tplt.second) {
+            RegNaming::writeHistToFile(histo.GetHistCopy(), sys.first,
+                                       sample.first, regName, file);
+          }
+        }
+      }
+    }
+  }
+}
+
+template <typename RegNaming>
+void HistFastSvc<RegNaming>::Write(EL::IWorker* wk) {
+  for (auto& sys : m_storage) {
+    for (auto& sample : sys.second) {
+      for (auto& reg : sample.second) {
+        const std::string& regName =
+            m_regnames[sys.first][sample.first][reg.first];
+        for (auto& tplt : reg.second) {
+          for (auto& histo : tplt.second) {
+            RegNaming::registerToELWorker(histo.GetHistCopy(), sys.first,
+                                          sample.first, regName, wk);
+          }
+        }
+      }
+    }
+  }
+}
+
+template <typename RegNaming>
+void HistFastSvc<RegNaming>::UpdateCurrentWeightSysts() {
+  UpdateCurrent();
+  if (!m_validWeightSystsCache) {
+    m_currentWeightSysts.clear();
+    for (auto& syst : m_weightSysts) {
+      m_currentWeightSysts.push_back(
+          std::make_pair(&(m_storage[syst.first][m_sample]), syst.second));
+    }
+    m_validWeightSystsCache = true;
+  }
+}
