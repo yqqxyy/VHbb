@@ -1,0 +1,100 @@
+2013-12-06 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Switch to sub+leading jet PDFs
+	* Truth jet pT spectra for low and high eta and semileptonic and non-semileptonic
+	* Jet response (ptReco/ptTruth) for low and high eta binned in pT reco
+	* Apply jet scale correction (offset from 1) to reco jets before the fit, DEF as ptReco_corr
+	* Probe the jet response PDFs with this offset in place, (ptReco_corr / ptFit) - 1 + <ptReco / ptTruth>(PDF bin for ptReco_corr)
+	* Increase the maximal number of fit iterations by one magnitude
+	* Set boundary of lepton and jet energy/pT parameters more reasonable
+	* Evaluate convergence by Minuit(1) status flag only
+	* Tagging as KinematicFit-00-00-11
+	* Tagging as KinematicFit-00-00-12 (corrected revision from trunk)
+	* Extend usage of fitter to emubb events
+	* Tagging as KinematicFit-00-00-13
+
+2013-11-25 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* New ptReco corrections and TFs; combined semileptonic and non-semileptonic response
+
+2013-11-22 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Add baseline ptReco correction for GS-calibrated jets (used if KF did not converge)
+	* Add probing variable corresponding to the particle 4-vector for trees in Plotter
+
+2013-11-20 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Add Higgs mass constraint for testing (default: disabled)
+	* Apply baseline ptReco correction for EM+JES calibrated jets if KF did not converge
+	* Add event weight to trees in Plotter
+
+2013-11-04 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Add new set of jet transfer functions and ptReco corrections
+	* Add support for 3-jet events with dedicated response
+	* Dijet mass still constructed with highest two pT jets 
+	* Add feature to order particle set by pT, E, eta and phi
+	* Tagging as KinematicFit-00-00-10
+
+2013-10-31 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Add tree storage to internal plotter
+
+2013-09-20 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Add mLL, SumPx and SumPy for pre- and postfit export
+	* Add controls over internal plotter
+	* Tagging as KinematicFit-00-00-09
+
+2013-08-27 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Made final muon resolution calculation and usage more consistent
+	* Move "GeV" and "_DF_" consts to KF namespace
+	* Tagging as KinematicFit-00-00-08
+
+2013-08-23 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Fixed EnergyRescaler energy input to GeV; AddElectron() still takes MeV
+	* Added a variables class and FindRange() to Plotter class
+	* Tagging as KinematicFit-00-00-07
+
+2013-08-07 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Updated the likelihood function for muons to use the pT instead of the energy
+	* Added a Plotter class for internal fit analysis
+	* Tagging as KinematicFit-00-00-05
+	* Check input variable mu_cov_qoverp if zero and ensure absolut values 
+	* Tagging as KinematicFit-00-00-06 
+
+2013-08-02 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Added new AddMuon method, which takes as arguments the q/p error and the muon type
+	* Added new AddElectron method without the energy resolution argument
+	* Uses MuonMomentumCorrections/MuonResolutionAndMomentumScaleFactors and the egammaAnalysisUtils/EnergyRescalerUpgrade tool
+	* The package is now dependent on egammaAnalysisUtils!
+
+2013-07-31 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Tagging as KinematicFit-00-00-04
+
+2013-05-27 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Added new enum to distinguish between muon detector types (for consistency accross different frameworks)
+
+2013-05-24 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Added flags to indicate init and event processing status to protect readout of FitManager, which would cause
+	SegFaults if no data available or fit not yet performed
+	* Added NULL pointer check for parameter readout in FitManager
+	* Return to user only postfit values if fit has converged, otherwise prefit values are returned
+
+2013-03-26 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Remove overhead from Getter methods in computational intensive sections
+	* Remove unnecessary unsigned-to-signed conversions
+
+2013-03-25 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Comment out VERBOSE method name statements
+	* Increase log prefix size from 10 to 15 char
+
+2013-02-27 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Add RootCore and Standalone makefiles
+	* Tagging as KinematicFit-00-00-03
+
+2013-02-26 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Requires the user to provide lepton energy resolutions
+	* Tagging as KinematicFit-00-00-02
+
+2013-02-26 Manuel Proissl <Manuel.Proissl@cern.ch>
+	* Initial import
+	* Standalone version only (w/o Makefile)
+	* Retrieves electron energy resolutions from egammaAnalysisUtils
+	* Assumes muon energy resolutions (temp. only)
+	* Assumes SumPx and SumPy resolutions to be 9 GeV
+	* Assumes Gaussian resolutions
+	* Tagging as KinematicFit-00-00-01

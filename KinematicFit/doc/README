@@ -1,0 +1,11 @@
+This is a short README of the KinematicFit package.
+
+@author Manuel Proissl <mproissl@cern.ch>
+@date   February 2013
+==========================================================================
+
+KinematicFit - a tool which can be used to apply a kinematic likelihood fit in two lepton events for the H->bb search.
+
+Further information and instructions can be found on the official TWiki page:
+https://twiki.cern.ch/twiki/bin/viewauth/AtlasProtected/KinematicFit
+

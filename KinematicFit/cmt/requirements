@@ -1,0 +1,21 @@
+## CMT requirements
+package KinematicFit
+author  Manuel Proissl
+
+## Athena policies
+use AtlasPolicy           AtlasPolicy-*
+
+## Package dependencies
+use AtlasROOT       AtlasROOT-*       External
+
+## Macros
+apply_tag       ROOTBasicLibs
+apply_tag       ROOTMathLibs
+
+# Create a named installed library
+library KinematicFitLib "../Root/*.cxx"
+apply_pattern named_installed_library library=KinematicFitLib
+
+apply_pattern declare_joboptions files="*.py"
+apply_pattern declare_python_modules files="*.py"
+
