@@ -1,331 +1,537 @@
-#include "CxAODReader_VHbb/MVATree_VBFHbb.h"
-#include "EventLoop/IWorker.h"
+#include "CxAODReader_VBFHbb/MVATree_VBFHbb.h"
+#include "EventLoop/Worker.h"
 
-MVATree_VBFHbb::MVATree_VBFHbb(bool persistent, bool readMVA,
-                               std::string analysisType, EL::IWorker* wk,
-                               std::vector<std::string> variations,
-                               bool nominalOnly, std::string MVAxmlFileName)
-    : MVATree(persistent, readMVA, wk, variations, nominalOnly),
-      m_analysisType(analysisType) {
-  m_xmlFileName = MVAxmlFileName;
-  SetBranches();
-}
+MVATree_VBFHbb::MVATree_VBFHbb(bool persistent, bool readMVA, std::string analysisType, EL::Worker* wk, std::vector<std::string> variations, bool nominalOnly) 
+ : MVATree(persistent, readMVA, wk, variations, nominalOnly),
+   m_analysisType(analysisType) { SetBranches(); }
 
 void MVATree_VBFHbb::AddBranch(TString name, Int_t* address) {
-  for (std::pair<std::string, TTree*> tree : m_treeMap) {
-    tree.second->Branch(name, address);
-  }
+  for (std::pair<std::string, TTree*> tree : m_treeMap) 
+    tree.second -> Branch(name, address);
   m_reader.AddVariable(name, address);
 }
 
 void MVATree_VBFHbb::AddBranch(TString name, Float_t* address) {
-  for (std::pair<std::string, TTree*> tree : m_treeMap) {
-    tree.second->Branch(name, address);
-  }
+  for (std::pair<std::string, TTree*> tree : m_treeMap) 
+    tree.second -> Branch(name, address);
   m_reader.AddVariable(name, address);
 }
 
 void MVATree_VBFHbb::AddBranch(TString name, ULong64_t* address) {
-  for (std::pair<std::string, TTree*> tree : m_treeMap) {
-    tree.second->Branch(name, address);
-  }
+  for (std::pair<std::string, TTree*> tree : m_treeMap) 
+    tree.second -> Branch(name, address);
   m_reader.AddVariable(name, address);
 }
 
 void MVATree_VBFHbb::AddBranch(TString name, std::string* address) {
-  for (std::pair<std::string, TTree*> tree : m_treeMap) {
-    tree.second->Branch(name, address);
-  }
+  for (std::pair<std::string, TTree*> tree : m_treeMap) 
+    tree.second -> Branch(name, address);
 }
+
+// Additional methods for storing std::vectors
+void MVATree_VBFHbb::AddBranch(TString name, std::vector<int> *address) {
+  for (std::pair<std::string, TTree*> tree : m_treeMap) 
+    tree.second -> Branch(name, address);
+}
+void MVATree_VBFHbb::AddBranch(TString name, std::vector<float> *address) {
+  for (std::pair<std::string, TTree*> tree : m_treeMap) 
+    tree.second -> Branch(name, address);
+}
+
 
 void MVATree_VBFHbb::SetBranches() {
   // prepare MVA reader
   m_reader.SetSplitVar(&EventNumber);
   m_reader.AddReader("reader", 2);
 
-  AddBranch("passTrig", &passTrig);
-  AddBranch("matchTrig", &matchTrig);
-  AddBranch("passMVAPreSel", &passMVAPreSel);
+  //  AddBranch("sample", &sample);
 
-  AddBranch("sample", &sample);
-  AddBranch("MCChannelNumber", &MCChannelNumber);
-  AddBranch("randomRunNumber", &randomRunNumber);
-  AddBranch("EventWeight", &EventWeight);
-  AddBranch("dEtaJJSF", &dEtaJJSF);
-  AddBranch("mindRBPhSF", &mindRBPhSF);
-  AddBranch("pTJJSF", &pTJJSF);
-  AddBranch("pTBalSF", &pTBalSF);
-  AddBranch("bjetTrigPt_SF", &bjetTrigPt_SF);
-  AddBranch("bjetTrigEta_SF", &bjetTrigEta_SF);
-  AddBranch("RunNumber", &RunNumber);
-  AddBranch("EventNumber", &EventNumber);
-  AddBranch("AverageMu", &AverageMu);
-  AddBranch("ActualMu", &ActualMu);
-  AddBranch("AverageMuScaled", &AverageMuScaled);
-  AddBranch("ActualMuScaled", &ActualMuScaled);
-  AddBranch("Nvtx", &Nvtx);
-  AddBranch("ZPV", &ZPV);
+  AddBranch("weightSysts",     &weightSysts);
+  AddBranch("weightspdf4lhc",    &weightspdf4lhc);
+  AddBranch("weightspdfnnpdf30", &weightspdfnnpdf30);
+  AddBranch("weightsqcdnnlops",  &weightsqcdnnlops);
+  AddBranch("weightsqcdnnlops2np",  &weightsqcdnnlops2np);
+  AddBranch("weightsqcdwg1",     &weightsqcdwg1);
+  AddBranch("weightsalternativepdf",  &weightsalternativepdf);
 
-  AddBranch("tagCatExcl", &tagCatExcl);
-  AddBranch("tagCatExclDirect", &tagCatExclDirect);
+  AddBranch("runNumber"  ,     &RunNumber);
+  AddBranch("lumiBlock"  ,     &LumiBlock);
+  AddBranch("eventNumber",     &EventNumber);
+  AddBranch("npv",     &npv);
+  AddBranch("mcWeight"   ,     &MCWeight);
+  AddBranch("eventWeight",     &EventWeight);
+  AddBranch("BJetTriggerWeight", &BJetTriggerWeight);
+  AddBranch("BJetSF", &BJetSF);
+  AddBranch("alpha_s_up", &alpha_s_up);
+  AddBranch("alpha_s_dn", &alpha_s_dn);
+  AddBranch("mcChannelNumber", &MCChannelNumber);
+  AddBranch("nJets"      ,     &nJets);
+  AddBranch("nJets20pt"  ,     &nJets20pt);
+  AddBranch("nJets30pt"  ,     &nJets30pt);
+  AddBranch("nJets40pt"  ,     &nJets40pt);
+  AddBranch("nJets50pt"  ,     &nJets50pt);
+  AddBranch("nJets60pt"  ,     &nJets60pt);
 
-  //  AddBranch("nJ", &nJ);
-  AddBranch("nJets", &nJets);
-  AddBranch("mJJ", &mJJ);
-  AddBranch("pTJJ", &pTJJ);
-  AddBranch("dEtaJJ", &dEtaJJ);
-  AddBranch("dRJJ", &dRJJ);
-  AddBranch("dPhiJJ", &dPhiJJ);
-  AddBranch("maxEta", &maxEta);
+  AddBranch("nTightMv2c20",    &nTightMv2c20);
+  AddBranch("nMediumMv2c20",   &nMediumMv2c20);
+  AddBranch("nLooseMv2c20",    &nLooseMv2c20);
 
-  AddBranch("mBB", &mBB);
-  AddBranch("mBBNoCorr", &mBBNoCorr);
-  AddBranch("dRBB", &dRBB);
-  AddBranch("dPhiBB", &dPhiBB);
-  AddBranch("dEtaBB", &dEtaBB);
-  AddBranch("pTBB", &pTBB);
-  AddBranch("dPhiPhBmin", &dPhiPhBmin);
-  AddBranch("mBBPh", &mBBPh);
+  AddBranch("nTightMv2c10",    &nTightMv2c10);
+  AddBranch("nMediumMv2c10",   &nMediumMv2c10);
+  AddBranch("nLooseMv2c10",    &nLooseMv2c10);
 
-  //  AddBranch("nJetGap", &nJetGap);
-  //  AddBranch("HT_gap", &HT_gap);
-  AddBranch("HT_soft", &HT_soft);
-  //  AddBranch("HT_soft_SCALEUP", &HT_soft_SCALEUP);
-  //  AddBranch("HT_soft_SCALEDOWN", &HT_soft_SCALEDOWN);
-  //  AddBranch("HT_soft_RESOPARA", &HT_soft_RESOPARA);
-  //  AddBranch("HT_soft_RESOPERP", &HT_soft_RESOPERP);
-  AddBranch("pTBal", &pTBal);
-  //
-  //  AddBranch("nTrkJet2", &nTrkJet2);
-  //  AddBranch("nTrkJet5", &nTrkJet5);
-  //  AddBranch("nTrkJet10", &nTrkJet10);
-  AddBranch("dEtaJJBB", &dEtaJJBB);
-  AddBranch("dPhiBBJJ", &dPhiBBJJ);
-  AddBranch("pTTot", &pTTot);
-  AddBranch("pZTot", &pZTot);
-  AddBranch("HT", &HT);
-  AddBranch("pTJ5", &pTJ5);
-  //  AddBranch("pTJ4", &pTJ4);
-  AddBranch("etaJStar", &etaJStar);
-  //  AddBranch("cosThetaA", &cosThetaA);
-  AddBranch("cosThetaC", &cosThetaC);
-  //
-  //  AddBranch("cenHJJ", &cenHJJ);
-  //  AddBranch("cenHgJJ", &cenHgJJ);
-  AddBranch("cenPhJJ", &cenPhJJ);
+  AddBranch("pT"         ,     &pT);
+  AddBranch("phi"        ,     &phi);
+  AddBranch("eta"        ,     &eta);
+  AddBranch("mv2c10"     ,     &mv2c10);
+  AddBranch("mv2c20"     ,     &mv2c20);
+  AddBranch("jetWidth"   ,     &jetWidth);
 
-  AddBranch("pTJ1", &pTJ1);
-  AddBranch("pTJ2", &pTJ2);
-  AddBranch("pTB1", &pTB1);
-  AddBranch("pTB2", &pTB2);
-  AddBranch("pTPh", &pTPh);
+  AddBranch("truthLabel" ,     &truthLabelID);
+  AddBranch("coneTruthLabelID",&coneTruthLabelID);
+  AddBranch("hadronConeExclTruthLabelID",&hadronConeExclTruthLabelID);
+  AddBranch("partonTruthLabelID" ,     &partonTruthLabelID);
 
-  AddBranch("etaJ1", &etaJ1);
-  AddBranch("etaJ2", &etaJ2);
-  AddBranch("etaB1", &etaB1);
-  AddBranch("etaB2", &etaB2);
-  AddBranch("etaPh", &etaPh);
 
-  AddBranch("MV2c10B1", &MV2c10B1);
-  AddBranch("MV2c10B2", &MV2c10B2);
-  AddBranch("WidthJ1", &WidthJ1);
-  AddBranch("WidthJ2", &WidthJ2);
 
-  AddBranch("dRB1Ph", &dRB1Ph);
-  AddBranch("dRB2Ph", &dRB2Ph);
-  AddBranch("dRJ1Ph", &dRJ1Ph);
-  AddBranch("dRJ2Ph", &dRJ2Ph);
+  AddBranch("whoIsJ1"    ,     &whoIsJ1);
+  AddBranch("whoIsJ2"    ,     &whoIsJ2);
+  AddBranch("whoIsB1"    ,     &whoIsB1);
+  AddBranch("whoIsB2"    ,     &whoIsB2);
 
-  AddBranch("dRB1J1", &dRB1J1);
-  AddBranch("dRB1J2", &dRB1J2);
-  AddBranch("dRB2J1", &dRB2J1);
-  AddBranch("dRB2J2", &dRB2J2);
+  AddBranch("mBB"        ,     &mBB);
+  AddBranch("mBB_no_corr",     &mBB_no_corr);
+  AddBranch("dRBB"       ,     &dRBB);
+  AddBranch("dRBB_no_corr",    &dRBB_no_corr);
+  AddBranch("dPhiBB"     ,     &dPhiBB);
+  AddBranch("dEtaBB"     ,     &dEtaBB);
+  AddBranch("pTBB"       ,     &pTBB);
+  AddBranch("pTBB_no_corr",    &pTBB_no_corr);
 
-  AddBranch("nTrkPt5J1", &nTrkPt5J1);
-  AddBranch("nTrkPt5J2", &nTrkPt5J2);
-  //  AddBranch("nTrkPt10J1", &nTrkPt10J1);
-  //  AddBranch("nTrkPt10J2", &nTrkPt10J2);
-  AddBranch("SumPtExtraJets", &SumPtExtraJets);
-  AddBranch("mindRBPh", &mindRBPh);
-  AddBranch("mindRJPh", &mindRJPh);
-  //  AddBranch("dR_BPhovJPh", &dR_BPhovJPh);
-  //  AddBranch("mindRJ1J", &mindRJ1J);
-  //  AddBranch("mindRJ2J", &mindRJ2J);
-  //  AddBranch("mindRB1J", &mindRB1J);
-  //  AddBranch("mindRB2J", &mindRB2J);
-  AddBranch("mindRJ1Ji", &mindRJ1Ji);
-  AddBranch("mindRJ2Ji", &mindRJ2Ji);
+  AddBranch("mJJ"        ,     &mJJ);
+  AddBranch("mJ1B1"      ,     &mJ1B1);
+  AddBranch("mJ1B2"      ,     &mJ1B2);
+  AddBranch("dRJJ"       ,     &dRJJ);
+  AddBranch("dPhiJJ"     ,     &dPhiJJ);
+  AddBranch("dEtaJJ"     ,     &dEtaJJ);
+  AddBranch("pTJJ"       ,     &pTJJ);
 
-  //  AddBranch("passVBF18", &passVBF18);
-  //  AddBranch("passVBF20", &passVBF20);
-  //  AddBranch("passVBF22", &passVBF22);
-  //  AddBranch("passVBF0b", &passVBF0b);
-  //  AddBranch("passVBF1b", &passVBF1b);
-  //  AddBranch("passVBF1bs", &passVBF1bs);
-  //  AddBranch("passVBF2b", &passVBF2b);
-  //  AddBranch("passVBF2bs", &passVBF2bs);
-  //  AddBranch("passVBF25g4j", &passVBF25g4j);
-  //  AddBranch("passEM13VH", &passEM13VH);
-  //  AddBranch("passEM15VH", &passEM15VH);
-  //  AddBranch("passEM18VH", &passEM18VH);
-  //  AddBranch("passEM20VH", &passEM20VH);
-  //  AddBranch("passEM22VHI", &passEM22VHI);
-  //  AddBranch("passg10", &passg10);
-  //  AddBranch("passg15", &passg15);
-  //  AddBranch("passg20", &passg20);
-  //  AddBranch("passg20m", &passg20m);
-  //  AddBranch("passg25", &passg25);
-  //  AddBranch("passg35", &passg35);
-  //  AddBranch("passg40", &passg40);
-  //  AddBranch("passg45", &passg45);
-  //  AddBranch("passg50", &passg50);
-  //  AddBranch("passg60", &passg60);
-  //  AddBranch("passg70", &passg70);
-  //  AddBranch("passg80", &passg80);
-  //  AddBranch("passg100", &passg100);
-  //  AddBranch("passg120", &passg120);
-  //
-  //  AddBranch("l1_emet", &l1_emet);
-  //  AddBranch("hlt_phpt", &hlt_phpt);
-  //  AddBranch("hlt_j1pt", &hlt_j1pt);
-  //  AddBranch("hlt_j2pt", &hlt_j2pt);
-  //  AddBranch("hlt_j3pt", &hlt_j3pt);
-  //  AddBranch("hlt_j4pt", &hlt_j4pt);
-  //  AddBranch("hlt_j5pt", &hlt_j5pt);
-  //  AddBranch("hlt_mjj", &hlt_mjj);
-  //  AddBranch("hlt_phpt_matched", &hlt_phpt_matched);
-  //  AddBranch("hlt_j4pt_phor", &hlt_j4pt_phor);
-  //  AddBranch("hlt_mjj_phor", &hlt_mjj_phor);
+  AddBranch("minEta"    ,      &minEta);
+  AddBranch("maxEta"    ,      &maxEta);
 
-  //  AddBranch("weight_forwardJetScale_up", &weight_forwardJetScale_up);
-  //  AddBranch("weight_forwardJetScale_down", &weight_forwardJetScale_down);
-  //  AddBranch("weight_pTBalScale_up", &weight_pTBalScale_up);
-  //  AddBranch("weight_pTBalScale_down", &weight_pTBalScale_down);
-  //  AddBranch("weight_pTBalPS_up", &weight_pTBalPS_up);
-  //  AddBranch("weight_pTBalPS_down", &weight_pTBalPS_down);
-  //  AddBranch("weight_TrigJetEff_up", &weight_TrigJetEff_up);
-  //  AddBranch("weight_TrigJetEff_down", &weight_TrigJetEff_down);
-  //  AddBranch("weight_TrigL1EMEffon", &weight_TrigL1EMEffon);
+  // ====                                                                                                                                                               
 
-  AddBranch("BDT", &BDT);
+  // AddBranch("passCURRENT",     &passCURRENT);
+  // AddBranch("passATLAS",     &passATLAS);
+  // AddBranch("passCMS",     &passCMS);
+  // AddBranch("passHYBRID",     &passHYBRID);
 
-  // AddBranch("MCWeight",        &MCWeight);
-  // AddBranch("mBB_Regression", &mBB_Regression);
-  // AddBranch("mBB_OneMu", &mBB_OneMu);
-  // AddBranch("mBB_PtRecollbbOneMuPartonBukinNew",
-  // &mBB_PtRecollbbOneMuPartonBukinNew);
+  // AddBranch("whoIsB1_CURRENT" , &whoIsB1_CURRENT);
+  // AddBranch("whoIsB2_CURRENT" , &whoIsB2_CURRENT);
+  // AddBranch("whoIsB1_ATLAS", &whoIsB1_ATLAS);
+  // AddBranch("whoIsB2_ATLAS", &whoIsB2_ATLAS);
+  // AddBranch("whoIsB1_CMS", &whoIsB1_CMS );
+  // AddBranch("whoIsB2_CMS", &whoIsB2_CMS );
+  // AddBranch("whoIsB1_HYBRID", &whoIsB1_HYBRID );
+  // AddBranch("whoIsB2_HYBRID", &whoIsB2_HYBRID );
+
+  // =====   
+
+  AddBranch("pTJ1",&pTJ1);
+  AddBranch("pTJ2",&pTJ2);
+  AddBranch("pTB1",&pTB1);
+  AddBranch("pTB2",&pTB2);
+  AddBranch("pTB1_no_corr",&pTB1_no_corr);
+  AddBranch("pTB2_no_corr",&pTB2_no_corr);
+
+  AddBranch("etaJ1",&etaJ1);
+  AddBranch("etaJ2",&etaJ2);
+  AddBranch("etaB1",&etaB1);
+  AddBranch("etaB2",&etaB2);
+  AddBranch("etaB1_no_corr",&etaB1_no_corr);
+  AddBranch("etaB2_no_corr",&etaB2_no_corr);
+
+  AddBranch("J1FJVTLoose",&J1FJVTLoose);
+  AddBranch("J2FJVTLoose",&J2FJVTLoose);
+  AddBranch("J1FJVTTight",&J1FJVTTight);
+  AddBranch("J2FJVTTight",&J2FJVTTight);
+
+  AddBranch("dRB1J1",&dRB1J1);
+  AddBranch("dRB1J2",&dRB1J2);
+  AddBranch("dRB2J1",&dRB2J1);
+  AddBranch("dRB2J2",&dRB2J2);
+
+  AddBranch("mindRJ1",&mindRJ1);
+  AddBranch("mindRJ2",&mindRJ2);
+  AddBranch("mindRJ1_Ex",&mindRJ1_Ex);
+  AddBranch("mindRJ2_Ex",&mindRJ2_Ex);
+  AddBranch("mindRB1",&mindRB1);
+  AddBranch("mindRB2",&mindRB2);
+
+  AddBranch("TruthLabelB1",&TruthLabelB1);
+  AddBranch("TruthLabelB2",&TruthLabelB2);
+  AddBranch("TruthLabelPartonB1",&TruthLabelPartonB1);
+  AddBranch("TruthLabelPartonB2",&TruthLabelPartonB2);
+  AddBranch("HadronConeExclTruthLabelB1", &HadronConeExclTruthLabelB1);
+  AddBranch("HadronConeExclTruthLabelB2", &HadronConeExclTruthLabelB2);
+
+  AddBranch("MV2c20B1",&MV2c20B1);
+  AddBranch("MV2c20B2",&MV2c20B2);
+  AddBranch("MV2c20J1",&MV2c20J1);
+  AddBranch("MV2c20J2",&MV2c20J2);
+
+  AddBranch("MV2c10B1",&MV2c10B1);
+  AddBranch("MV2c10B2",&MV2c10B2);
+  AddBranch("MV2c10J1",&MV2c10J1);
+  AddBranch("MV2c10J2",&MV2c10J2);
+
+  AddBranch("WidthJ1",&WidthJ1);
+  AddBranch("WidthJ2",&WidthJ2);
+
+  AddBranch("NTrk1000PVJ1",&NTrk1000PVJ1);
+  AddBranch("NTrk1000PVJ2",&NTrk1000PVJ2);
+
+  AddBranch("NTrk500PVJ1",&NTrk500PVJ1);
+  AddBranch("NTrk500PVJ2",&NTrk500PVJ2);
+
+  AddBranch("QGTaggerJ1",&QGTaggerJ1);
+  AddBranch("QGTaggerJ2",&QGTaggerJ2);
+  AddBranch("QGTaggerWeightJ1", &QGTaggerWeightJ1);
+  AddBranch("QGTaggerWeightJ2", &QGTaggerWeightJ2);
+
+
+  AddBranch("pT_ballance" ,    &pT_ballance );
+
+  // ======                                                                    
+
+  AddBranch("max_J1J2"   ,     &max_J1J2);
+  AddBranch("eta_J_star" ,     &eta_J_star);
+  AddBranch("cosTheta_MVA",    &cosTheta_MVA);
+  AddBranch("cosTheta",    &cosTheta_CMS);
+  AddBranch("cosTheta_boost",    &cosTheta_boost);
+  AddBranch("HT_soft"    ,     &HT_soft);
+  AddBranch("HT_MVA"    ,     &HT_MVA);
+  //  AddBranch("BDT"        ,     &BDT);
+
+
+
+
+  // ====================================================================
+  // store trigger decisions
+  AddBranch("pass_L1_2J25" , &pass_L1_2J25);
+  AddBranch("pass_L1_J25_0ETA23" , &pass_L1_J25_0ETA23);
+  AddBranch("pass_L1_HT150_JJ15_ETA49" , &pass_L1_HT150_JJ15_ETA49);
+  AddBranch("pass_L1_2J15_31ETA49" , &pass_L1_2J15_31ETA49);
+  AddBranch("pass_L1_HT150_J20s5_ETA31" , &pass_L1_HT150_J20s5_ETA31);
+  AddBranch("pass_L1_MJJ_400" , &pass_L1_MJJ_400);
+  AddBranch("pass_L1_J40_0ETA25" , &pass_L1_J40_0ETA25);
+  AddBranch("pass_L1_MJJ_400_CF" , &pass_L1_MJJ_400_CF);
+  AddBranch("pass_L1_J20_31ETA49" , &pass_L1_J20_31ETA49);
+  AddBranch("pass_L1_J40_0ETA25_2J25_J20_31ETA49" , &pass_L1_J40_0ETA25_2J25_J20_31ETA49);
+  AddBranch("pass_L1_J25_0ETA23_2J15_31ETA49" , &pass_L1_J25_0ETA23_2J15_31ETA49);
+  AddBranch("pass_L1_HT150_J20s5_ETA31_MJJ_400_CF" , &pass_L1_HT150_J20s5_ETA31_MJJ_400_CF);
+  AddBranch("pass_L1_J40_0ETA25_2J15_31ETA49" , &pass_L1_J40_0ETA25_2J15_31ETA49);
+  AddBranch("pass_L1_HT150_JJ15_ETA49_MJJ_400" , &pass_L1_HT150_JJ15_ETA49_MJJ_400);
+  AddBranch("pass_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490" , &pass_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490);
+  AddBranch("pass_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49" , &pass_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49);
+  AddBranch("pass_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split" , &pass_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split);
+  AddBranch("pass_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split" , &pass_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split);
+  AddBranch("pass_HLT_j80_0eta240_j60_j45_320eta490" , &pass_HLT_j80_0eta240_j60_j45_320eta490);
+  AddBranch("pass_HLT_j80_0eta240_2j60_320eta490" , &pass_HLT_j80_0eta240_2j60_320eta490);
+  AddBranch("pass_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49" , &pass_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49);
+
+  // ====================================================================
+  // If trigger is active
+  AddBranch("isActive_L1_2J25" , &isActive_L1_2J25);
+  AddBranch("isActive_L1_J25_0ETA23" , &isActive_L1_J25_0ETA23);
+  AddBranch("isActive_L1_HT150_JJ15_ETA49" , &isActive_L1_HT150_JJ15_ETA49);
+  AddBranch("isActive_L1_2J15_31ETA49" , &isActive_L1_2J15_31ETA49);
+  AddBranch("isActive_L1_HT150_J20s5_ETA31" , &isActive_L1_HT150_J20s5_ETA31);
+  AddBranch("isActive_L1_MJJ_400" , &isActive_L1_MJJ_400);
+  AddBranch("isActive_L1_J40_0ETA25" , &isActive_L1_J40_0ETA25);
+  AddBranch("isActive_L1_MJJ_400_CF" , &isActive_L1_MJJ_400_CF);
+  AddBranch("isActive_L1_J20_31ETA49" , &isActive_L1_J20_31ETA49);
+  AddBranch("isActive_L1_J40_0ETA25_2J25_J20_31ETA49" , &isActive_L1_J40_0ETA25_2J25_J20_31ETA49);
+  AddBranch("isActive_L1_J25_0ETA23_2J15_31ETA49" , &isActive_L1_J25_0ETA23_2J15_31ETA49);
+  AddBranch("isActive_L1_HT150_J20s5_ETA31_MJJ_400_CF" , &isActive_L1_HT150_J20s5_ETA31_MJJ_400_CF);
+  AddBranch("isActive_L1_J40_0ETA25_2J15_31ETA49" , &isActive_L1_J40_0ETA25_2J15_31ETA49);
+  AddBranch("isActive_L1_HT150_JJ15_ETA49_MJJ_400" , &isActive_L1_HT150_JJ15_ETA49_MJJ_400);
+  AddBranch("isActive_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490" , &isActive_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490);
+  AddBranch("isActive_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49" , &isActive_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49);
+  AddBranch("isActive_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split" , &isActive_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split);
+  AddBranch("isActive_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split" , &isActive_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split);
+  AddBranch("isActive_HLT_j80_0eta240_j60_j45_320eta490" , &isActive_HLT_j80_0eta240_j60_j45_320eta490);
+  AddBranch("isActive_HLT_j80_0eta240_2j60_320eta490" , &isActive_HLT_j80_0eta240_2j60_320eta490);
+  AddBranch("isActive_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49" , &isActive_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49);
+
+  // ====================================================================
+  // Trigger Pre-Scales
+  AddBranch("prescale_L1_2J25" , &prescale_L1_2J25);
+  AddBranch("prescale_L1_J25_0ETA23" , &prescale_L1_J25_0ETA23);
+  AddBranch("prescale_L1_HT150_JJ15_ETA49" , &prescale_L1_HT150_JJ15_ETA49);
+  AddBranch("prescale_L1_2J15_31ETA49" , &prescale_L1_2J15_31ETA49);
+  AddBranch("prescale_L1_HT150_J20s5_ETA31" , &prescale_L1_HT150_J20s5_ETA31);
+  AddBranch("prescale_L1_MJJ_400" , &prescale_L1_MJJ_400);
+  AddBranch("prescale_L1_J40_0ETA25" , &prescale_L1_J40_0ETA25);
+  AddBranch("prescale_L1_MJJ_400_CF" , &prescale_L1_MJJ_400_CF);
+  AddBranch("prescale_L1_J20_31ETA49" , &prescale_L1_J20_31ETA49);
+  AddBranch("prescale_L1_J40_0ETA25_2J25_J20_31ETA49" , &prescale_L1_J40_0ETA25_2J25_J20_31ETA49);
+  AddBranch("prescale_L1_J25_0ETA23_2J15_31ETA49" , &prescale_L1_J25_0ETA23_2J15_31ETA49);
+  AddBranch("prescale_L1_HT150_J20s5_ETA31_MJJ_400_CF" , &prescale_L1_HT150_J20s5_ETA31_MJJ_400_CF);
+  AddBranch("prescale_L1_J40_0ETA25_2J15_31ETA49" , &prescale_L1_J40_0ETA25_2J15_31ETA49);
+  AddBranch("prescale_L1_HT150_JJ15_ETA49_MJJ_400" , &prescale_L1_HT150_JJ15_ETA49_MJJ_400);
+  AddBranch("prescale_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490" , &prescale_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490);
+  AddBranch("prescale_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49" , &prescale_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49);
+  AddBranch("prescale_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split" , &prescale_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split);
+  AddBranch("prescale_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split" , &prescale_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split);
+  AddBranch("prescale_HLT_j80_0eta240_j60_j45_320eta490" , &prescale_HLT_j80_0eta240_j60_j45_320eta490);
+  AddBranch("prescale_HLT_j80_0eta240_2j60_320eta490" , &prescale_HLT_j80_0eta240_2j60_320eta490);
+  AddBranch("prescale_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49" , &prescale_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49);
+
+  // ====================================================================
 
   // book MVA reader
-  if (m_xmlFileName == "")
-    m_xmlFileName =
-        "vbfgamma_BDT_0of2_ICHEP2016.weights.xml";  // can be modified by
-                                                    // setting MVAxmlFileName in
-                                                    // framework-read-vbfa.cfg
   TString xmlFile = getenv("WorkDir_DIR");
-  if (m_analysisType == "vbfa" && m_readMVA) {
-    xmlFile += "/data/CxAODReader_VHbb/";
-    xmlFile += m_xmlFileName;
-    m_reader.BookReader("reader", xmlFile);
+
+  if (m_analysisType == "vbf" && m_readMVA) {
+	 xmlFile += "/data/CxAODReader_VBFHbb/vbfgamma_BDT_0of2_weights.xml";
+	 m_reader.BookReader("reader", xmlFile);
   }
+	
 }
 
 void MVATree_VBFHbb::TransformVars() {}
 
+
 void MVATree_VBFHbb::Reset() {
-  passTrig = 0;
-  matchTrig = 0;
+  //  sample = "Unknown";
 
-  sample = "Unknown";
-  MCChannelNumber = -1;
-  EventWeight = 0;
-  RunNumber = -1;
-  EventNumber = -1;
-  AverageMu = -99;
-  ActualMu = -99;
-  AverageMuScaled = -99;
-  ActualMuScaled = -99;
-  Nvtx = -99;
-  ZPV = -99;
+  RunNumber       = 0;
+  LumiBlock       = 0;
+  EventNumber     = 0;
+  npv             = 0;
+  MCWeight        = 0;
+  EventWeight     = 0;
+  BJetTriggerWeight =0;
+  BJetSF =0;
+  MCChannelNumber = 0;
+  nJets           = 0;
+  nJets20pt       = 0;
+  nJets30pt       = 0;
+  nJets40pt       = 0;
+  nJets50pt       = 0;
+  nJets60pt       = 0;
 
-  tagCatExcl = -1;
-  tagCatExclDirect = -1;
+  nTightMv2c20    = 0;
+  nMediumMv2c10   = 0;
+  nLooseMv2c10    = 0;
 
-  //  nJ              = -1;
-  nJets = -1;
-  mJJ = -1;
-  pTJJ = -1;
-  dEtaJJ = -1;
-  dRJJ = -1;
-  dPhiJJ = -1;
+  nTightMv2c10    = 0;
+  nMediumMv2c10   = 0;
+  nLooseMv2c10    = 0;
 
-  mBB = -1;
-  mBBNoCorr = -1;
-  dRBB = -1;
-  dPhiBB = -1;
-  dEtaBB = -1;
-  pTBB = -1;
-  dPhiPhBmin = -1;
-  mBBPh = -1;
+  pT.clear();
+  phi.clear();
+  eta.clear();
+  mv2c10.clear();
+  mv2c20.clear();
+  jetWidth.clear();
+  truthLabelID.clear();
+  coneTruthLabelID.clear();
+  hadronConeExclTruthLabelID.clear();
+  partonTruthLabelID.clear();
+  weightSysts.clear();
 
-  //  nJetGap         = -1;
-  //  HT_gap          = -1;
-  HT_soft = -1;
-  pTBal = -1;
-  //
-  //  nTrkJet2        = -1;
-  //  nTrkJet5        = -1;
-  //  nTrkJet10       = -1;
-  //  dEtaJJBB        = -1;
-  pTTot = -1;
-  pZTot = -1;
-  HT = -1;
-  pTJ5 = -1;
+  weightspdf4lhc.clear();
+  weightspdfnnpdf30.clear();
+  weightsqcdnnlops.clear();
+  weightsqcdnnlops2np.clear();
+  weightsqcdwg1.clear();
+  weightsalternativepdf.clear();
 
-  //  cenHJJ          = -1;
-  //  cenHgJJ         = -1;
-  cenPhJJ = -1;
 
-  pTJ1 = -1;
-  pTJ2 = -1;
-  pTB1 = -1;
-  pTB2 = -1;
-  pTPh = -1;
+  alpha_s_up      = 0;
+  alpha_s_dn      = 0;
+  whoIsJ1         = 0;
+  whoIsJ2         = 0;
+  whoIsB1         = 0;
+  whoIsB2         = 0;
 
-  etaJ1 = -1;
-  etaJ2 = -1;
-  etaB1 = -1;
-  etaB2 = -1;
-  etaPh = -1;
+  mBB              = 0;
+  mBB_no_corr      = 0;
+  dRBB             = 0;
+  dRBB_no_corr     = 0;
+  dPhiBB           = 0;
+  dEtaBB           = 0;
+  pTBB             = 0;
+  pTBB_no_corr      = 0;
 
-  MV2c10B1 = -1;
-  MV2c10B2 = -1;
-  WidthJ1 = -1;
-  WidthJ2 = -1;
+  mJJ              = 0;
+  dRJJ             = 0;
+  dPhiJJ           = 0;
+  dEtaJJ           = 0;
+  pTJJ             = 0;
 
-  dRB1Ph = -1;
-  dRB2Ph = -1;
-  dRJ1Ph = -1;
-  dRJ2Ph = -1;
+  minEta           = 0;
+  maxEta           = 0;
 
-  dRB1J1 = -1;
-  dRB1J2 = -1;
-  dRB2J1 = -1;
-  dRB2J2 = -1;
+  // ======                                                                                                                                                              
+  // passCURRENT = 0;
+  // passATLAS = 0;
+  // passCMS = 0;
+  // passHYBRID = 0;
 
-  //  weight_forwardJetScale_up = -1;
-  //  weight_forwardJetScale_down = -1;
-  //  weight_pTBalScale_up = -1;
-  //  weight_pTBalScale_down = -1;
-  //  weight_pTBalPS_up = -1;
-  //  weight_pTBalPS_down = -1;
-  //
-  BDT = -1;
+  // whoIsB1_CURRENT = 0;
+  // whoIsB2_CURRENT = 0;
+  // whoIsB1_ATLAS = 0;
+  // whoIsB2_ATLAS = 0;
+  // whoIsB1_CMS = 0;
+  // whoIsB2_CMS = 0;
+  // whoIsB1_HYBRID = 0;
+  // whoIsB2_HYBRID = 0;
 
-  // MCWeight        = -1;
+  // ======  
+
+  pTJ1 = 0;
+  pTJ2 = 0;
+  pTB1 = 0;
+  pTB2 = 0;
+  pTB1_no_corr = 0;
+  pTB2_no_corr = 0;
+
+  J1FJVTLoose = 0;
+  J2FJVTLoose = 0;
+  J1FJVTTight = 0;
+  J2FJVTTight = 0;
+
+  etaJ1 = 0;
+  etaJ2 = 0;
+  etaB1 = 0;
+  etaB2 = 0;
+  etaB1_no_corr = 0;
+  etaB2_no_corr = 0;
+
+  dRB1J1 = 0;
+  dRB1J2 = 0;
+  dRB2J1 = 0;
+  dRB2J2 = 0;
+
+  mindRJ1 = 0;
+  mindRJ2 = 0;
+  mindRJ1_Ex = 0;
+  mindRJ2_Ex = 0;
+  mindRB1 = 0;
+  mindRB2 = 0;
+
+  TruthLabelB1 = 0;
+  TruthLabelB2 = 0;
+  TruthLabelPartonB1 = 0;
+  TruthLabelPartonB2 = 0;
+  HadronConeExclTruthLabelB1 =0;
+  HadronConeExclTruthLabelB2 =0;
+
+  MV2c20B1 = 0;
+  MV2c20B2 = 0;
+  MV2c20J1 = 0;
+  MV2c20J2 = 0;
+
+  MV2c10B1 = 0;
+  MV2c10B2 = 0;
+  MV2c10J1 = 0;
+  MV2c10J2 = 0;
+
+  WidthJ1 = 0;
+  WidthJ2 = 0;
+
+  NTrk1000PVJ1 =0;
+  NTrk1000PVJ2 =0;
+  NTrk500PVJ1 =0;
+  NTrk500PVJ2 =0;
+
+  pT_ballance = 0;
+
+  // ======                                                                    
+
+  max_J1J2         = 0;
+  eta_J_star       = 0;
+  HT_soft          = 0;
+  HT_MVA           = 0;
+  cosTheta_MVA     = 0;
+  cosTheta_CMS     = 0;
+  cosTheta_boost     = 0;
+  //  BDT              = -2;
+
+  // Triggers
+  pass_L1_2J25 = -1;
+  pass_L1_J25_0ETA23 = -1;
+  pass_L1_HT150_JJ15_ETA49 = -1;
+  pass_L1_2J15_31ETA49 = -1;
+  pass_L1_HT150_J20s5_ETA31 = -1;
+  pass_L1_MJJ_400 = -1;
+  pass_L1_J40_0ETA25 = -1;
+  pass_L1_MJJ_400_CF = -1;
+  pass_L1_J20_31ETA49 = -1;
+  pass_L1_J40_0ETA25_2J25_J20_31ETA49 = -1;
+  pass_L1_J25_0ETA23_2J15_31ETA49 = -1;
+  pass_L1_HT150_J20s5_ETA31_MJJ_400_CF = -1;
+  pass_L1_J40_0ETA25_2J15_31ETA49 = -1;
+  pass_L1_HT150_JJ15_ETA49_MJJ_400 = -1;
+  pass_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490 = -1;
+  pass_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49 = -1;
+  pass_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split = -1;
+  pass_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split = -1;
+  pass_HLT_j80_0eta240_j60_j45_320eta490 = -1;
+  pass_HLT_j80_0eta240_2j60_320eta490 = -1;
+  pass_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49 = -1;
+
+  isActive_L1_2J25 = -1;
+  isActive_L1_J25_0ETA23 = -1;
+  isActive_L1_HT150_JJ15_ETA49 = -1;
+  isActive_L1_2J15_31ETA49 = -1;
+  isActive_L1_HT150_J20s5_ETA31 = -1;
+  isActive_L1_MJJ_400 = -1;
+  isActive_L1_J40_0ETA25 = -1;
+  isActive_L1_MJJ_400_CF = -1;
+  isActive_L1_J20_31ETA49 = -1;
+  isActive_L1_J40_0ETA25_2J25_J20_31ETA49 = -1;
+  isActive_L1_J25_0ETA23_2J15_31ETA49 = -1;
+  isActive_L1_HT150_J20s5_ETA31_MJJ_400_CF = -1;
+  isActive_L1_J40_0ETA25_2J15_31ETA49 = -1;
+  isActive_L1_HT150_JJ15_ETA49_MJJ_400 = -1;
+  isActive_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490 = -1;
+  isActive_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49 = -1;
+  isActive_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split = -1;
+  isActive_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split = -1;
+  isActive_HLT_j80_0eta240_j60_j45_320eta490 = -1;
+  isActive_HLT_j80_0eta240_2j60_320eta490 = -1;
+  isActive_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49 = -1;
+
+  prescale_L1_2J25 = -1;
+  prescale_L1_J25_0ETA23 = -1;
+  prescale_L1_HT150_JJ15_ETA49 = -1;
+  prescale_L1_2J15_31ETA49 = -1;
+  prescale_L1_HT150_J20s5_ETA31 = -1;
+  prescale_L1_MJJ_400 = -1;
+  prescale_L1_J40_0ETA25 = -1;
+  prescale_L1_MJJ_400_CF = -1;
+  prescale_L1_J20_31ETA49 = -1;
+  prescale_L1_J40_0ETA25_2J25_J20_31ETA49 = -1;
+  prescale_L1_J25_0ETA23_2J15_31ETA49 = -1;
+  prescale_L1_HT150_J20s5_ETA31_MJJ_400_CF = -1;
+  prescale_L1_J40_0ETA25_2J15_31ETA49 = -1;
+  prescale_L1_HT150_JJ15_ETA49_MJJ_400 = -1;
+  prescale_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490 = -1;
+  prescale_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49 = -1;
+  prescale_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split = -1;
+  prescale_HLT_j80_0eta240_j60_j45_320eta490_AND_2j25_gsc45_bmv2c1070_split = -1;
+  prescale_HLT_j80_0eta240_j60_j45_320eta490 = -1;
+  prescale_HLT_j80_0eta240_2j60_320eta490 = -1;
+  prescale_HLT_j55_0eta240_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49 = -1;
 }
 
 void MVATree_VBFHbb::ReadMVA() {
   if (!m_readMVA) return;
-
-  BDT = m_reader.EvaluateMVA("reader");
+  //  BDT = m_reader.EvaluateMVA("reader");
 }
+
+

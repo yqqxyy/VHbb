@@ -23,6 +23,9 @@ class AnalysisReader_VHbb1Lep : public AnalysisReader_VHQQ1Lep {
 
 
  protected:
+  virtual EL::StatusCode finalize() override;
+  long   m_eventCountPassed_VBFHbb; // !
+  EL::StatusCode fill_VBFCutFlow (std::string label);
   EL::StatusCode save_meta_info (std::vector<const xAOD::Jet*>  const& Jets,
 				 std::vector<const xAOD::Jet*>  const& signalJets); // NEW METHOD                  
   EL::StatusCode save_trigger_info (); // NEW METHOD                  
