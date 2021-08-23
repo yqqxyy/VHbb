@@ -186,7 +186,7 @@ EL::StatusCode AnalysisReader_VHQQ::initializeSelection() {
     delete m_tree;
     m_tree = nullptr;
     m_tree_vbf = new MVATree_VBFHbb(writeMVATree, readMVA, m_analysisType, wk(),
-                                    m_variations, false, MVAxmlFileName);
+                                    m_variations, false);//, MVAxmlFileName);
   }
 
   // initialize EasyTree
