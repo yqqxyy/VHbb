@@ -948,7 +948,7 @@ EL::StatusCode AnalysisReader_VBFHbb1Ph::fill_vbf1ph() {
   //*********************************************************//
   //                       MVA TREE                          //
   //*********************************************************//
-
+/*
   if (m_debug) std::cout << " >>>>> MVA Tree" << std::endl;
 
   m_tree_vbf->Reset();
@@ -1066,7 +1066,7 @@ EL::StatusCode AnalysisReader_VBFHbb1Ph::fill_vbf1ph() {
   //  m_tree_vbf->mindRB1J         = m_mindRB1J;
   //  m_tree_vbf->mindRB2J         = m_mindRB2J;
   m_tree_vbf->mindRJ1Ji = m_mindRJ1Ji;
-  m_tree_vbf->mindRJ2Ji = m_mindRJ2Ji;
+  m_tree_vbf->mindRJ2Ji = m_mindRJ2Ji;*/
 
   //  if(m_doTrigStudy){
   //	 // triggers decision
