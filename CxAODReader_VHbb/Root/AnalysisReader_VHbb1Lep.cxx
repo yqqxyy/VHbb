@@ -5,6 +5,9 @@
 #include "CxAODReader/OSTree.h"
 #include "CxAODReader_VHbb/MVATree_BoostedVHbb.h"
 #include "CxAODReader_VHbb/MVATree_VHbb.h"
+
+#include "CxAODReader_VHbb/MVATree_VBFHbb.h"
+
 #include "CxAODTools/ITMVAApplicationTool.h"
 #include "CxAODTools_VHbb/TriggerTool_VHbb1lep.h"
 #include "CxAODTools_VHbb/VHbb1lepEvtSelection.h"
