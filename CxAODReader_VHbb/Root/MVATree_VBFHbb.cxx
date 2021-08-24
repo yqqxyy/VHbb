@@ -1,5 +1,5 @@
 #include "CxAODReader_VHbb/MVATree_VBFHbb.h"
-#include "EventLoop/Worker.h"
+#include "EventLoop/IWorker.h"
 
 MVATree_VBFHbb::MVATree_VBFHbb(bool persistent, bool readMVA, std::string analysisType, EL::Worker* wk, std::vector<std::string> variations, bool nominalOnly) 
  : MVATree(persistent, readMVA, wk, variations, nominalOnly),
