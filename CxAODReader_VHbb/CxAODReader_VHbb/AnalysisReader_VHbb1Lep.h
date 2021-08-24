@@ -35,6 +35,12 @@ class AnalysisReader_VHbb1Lep : public AnalysisReader_VHQQ1Lep {
 				std::vector<const xAOD::Jet*>  const& vbfJets,
 				std::vector<const xAOD::Jet*>  const& trackJets); // NEW METHOD   
 
+  std::pair<std::pair<float, float>, float>getCenterSlopeOfEllipse(const xAOD::Jet* \
+								   jet1, const xAOD::Jet* jet2);
+  bool trackJetIsInEllipse(std::pair<std::pair<float, float>, float> El,const xAOD::\
+			   Jet* jet, float dRBB, float r);
+
+
 
 
  private:

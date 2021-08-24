@@ -1,7 +1,7 @@
 #include "CxAODReader_VHbb/MVATree_VBFHbb.h"
 #include "EventLoop/IWorker.h"
 
-MVATree_VBFHbb::MVATree_VBFHbb(bool persistent, bool readMVA, std::string analysisType, EL::Worker* wk, std::vector<std::string> variations, bool nominalOnly) 
+MVATree_VBFHbb::MVATree_VBFHbb(bool persistent, bool readMVA, std::string analysisType, EL::IWorker* wk, std::vector<std::string> variations, bool nominalOnly) 
  : MVATree(persistent, readMVA, wk, variations, nominalOnly),
    m_analysisType(analysisType) { SetBranches(); }
 

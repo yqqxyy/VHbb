@@ -186,7 +186,7 @@ EL::StatusCode AnalysisReader_VHbb1Lep::fill_VBF (){
   bool passCuts = true;
 
   // trigger cut
-  if(!m_tree_vbf->passTrig) passCuts = false;
+  //if(!m_tree_vbf->passTrig) passCuts = false;
 
   if(!passCuts) {
     std::printf("Failed kinematic cuts! Skipping this event...\n");
@@ -706,6 +706,84 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_jet_info(
 
 }
 
+std::pair<std::pair<float, float>, float>
+AnalysisReader_VHbb1Lep::getCenterSlopeOfEllipse(const xAOD::Jet* jet1, const xAOD::Jet* jet2)
+{
+  float eta0;
+  float eta1;
+  float eta2;
+  float phi0;
+  float phi1;
+  float phi2;
+  float m;
+
+  if(jet1->phi() > jet2->phi()){
+    phi1 = jet1->phi();
+    phi2 = jet2->phi();
+    eta1 = jet1->eta();
+    eta2 = jet2->eta();
+  }
+  else{
+    phi1 = jet2->phi();
+    phi2 = jet1->phi();
+    eta1 = jet2->eta();
+    eta2 = jet1->eta();
+  }
+
+  eta0 = (eta1 + eta2)/2;
+  float dphi = phi1 - phi2;
+  if(dphi > TMath::Pi()) phi2 = phi2 + 2.*TMath::Pi();
+
+  phi0 = (phi1 + phi2)/2;
+  m = (phi1 - phi0)/(eta1 - eta0);
+  if (phi0 > TMath::Pi()) phi0 = phi0 - 2.*TMath::Pi();
+
+  std::pair<float, float> C(eta0, phi0);
+  std::pair<std::pair<float, float>, float> El(C, m);
+
+  return El;
+}
+
+
+bool AnalysisReader_VHbb1Lep::trackJetIsInEllipse(std::pair<std::pair<float, float>, float> El,
+						const xAOD::Jet* jet, float dRBB, float r){
+
+  float eta0 = El.first.first;
+  float phi0 = El.first.second;
+  float m = El.second;
+  float m_p = -1./m;
+
+  float etaj = jet->eta();
+  float phij = jet->phi();
+
+  if ( fabs(phi0 - phij) > TMath::Pi() ){
+    phij = (phi0 > phij)? phij + 2*TMath::Pi() : phij - 2*TMath::Pi();
+  }
+
+  float eta_I1 = ( 1. / (m - m_p) ) * ( m*eta0 - m_p*etaj - phi0 + phij);
+  float phi_I1 = m * (eta_I1 - eta0) + phi0;
+
+  float eta_I2 = ( 1. / (m_p - m) ) * ( m_p*eta0 - m*etaj - phi0 + phij);
+  float phi_I2 = m_p * (eta_I2 - eta0) + phi0;
+
+
+  // not sure below here!!!
+  float dEta1 = eta_I1 - etaj;
+  float dPhi1 = phi_I1 - phij;
+
+  float dEta2 = eta_I2 - etaj;
+  float dPhi2 = phi_I2 - phij;
+
+  float d1sq = dPhi1*dPhi1 + dEta1*dEta1;
+  float d2sq = dPhi2*dPhi2 + dEta2*dEta2;
+
+  float b = r;
+  float a = 0.5 * dRBB + r;
+
+  bool inEllipse = ( (d1sq / (b*b)) + (d2sq / (a*a)) ) < 1;
+
+  return inEllipse;
+}
 
 EL::StatusCode AnalysisReader_VHbb1Lep::initializeSelection() {
   // Read all variables that are relevant for the VHreso analysis from the

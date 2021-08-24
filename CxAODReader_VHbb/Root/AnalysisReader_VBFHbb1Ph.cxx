@@ -1176,7 +1176,7 @@ EL::StatusCode AnalysisReader_VBFHbb1Ph::fill_vbf1ph() {
   //  m_etree->SetBranchAndValue("tagCatExclDirect", tagCatExclDirect, -1);
   m_etree->SetBranchAndValue("mBB", HVecCorr.M(), double(-1));
   //  m_etree->SetBranchAndValue("mBBNoCorr", (b1Vec + b2Vec).M(), double(-1));
-  m_etree->SetBranchAndValue("BDT", m_tree_vbf->BDT, float(-10.));
+  //m_etree->SetBranchAndValue("BDT", m_tree_vbf->BDT, float(-10.));
   m_etree->SetBranchAndValue("nJets", nJets40, -1);
 
   // MVA preselection
@@ -1565,7 +1565,7 @@ EL::StatusCode AnalysisReader_VBFHbb1Ph::fill_vbf1ph() {
 
     // if(m_tree_vbf->BDT<0.1) m_histNameSvc->set_pTV(0); // BDT binning
     // else m_histNameSvc->set_pTV(1);
-    if (m_tree_vbf->BDT < -0.1)
+    /*if (m_tree_vbf->BDT < -0.1)
       m_histNameSvc->set_pTV(0);  // BDT binning
     else if (m_tree_vbf->BDT >= -0.1 && m_tree_vbf->BDT < 0.1)
       m_histNameSvc->set_pTV(1);  //  method follows VH convention :(
@@ -1644,7 +1644,7 @@ EL::StatusCode AnalysisReader_VBFHbb1Ph::fill_vbf1ph() {
     m_histSvc->BookFillHist("HT_soft", 50, 0., 400.,
                             m_tree_vbf->HT_soft * invGeV, m_weight * m_sysFact);
     m_histSvc->BookFillHist("pTBal", 50, 0., 1.0, m_tree_vbf->pTBal,
-                            m_weight * m_sysFact);
+                            m_weight * m_sysFact);*/
 
     m_histSvc->BookFillHist("nTrkJet2", 35, 0, 35, nTrkJet2,
                             m_weight * m_sysFact);

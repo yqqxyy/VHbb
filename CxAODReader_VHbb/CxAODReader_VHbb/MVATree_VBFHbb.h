@@ -24,7 +24,7 @@ class MVATree_VBFHbb : public MVATree {
 
  public:
 
-  MVATree_VBFHbb(bool persistent, bool readMVA, std::string analysisType, EL::Worker* wk, std::vector<std::string> variations, bool nominalOnly);
+  MVATree_VBFHbb(bool persistent, bool readMVA, std::string analysisType, EL::IWorker* wk, std::vector<std::string> variations, bool nominalOnly);
 
   ~MVATree_VBFHbb() {}
 
