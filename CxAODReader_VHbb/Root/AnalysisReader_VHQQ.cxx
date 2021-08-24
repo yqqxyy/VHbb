@@ -182,7 +182,7 @@ EL::StatusCode AnalysisReader_VHQQ::initializeSelection() {
         writeMVATree, readMVA, m_analysisType, wk(), m_variations, false);
   }
 
-  if ((m_analysisType == "vbf") || (m_analysisType == "vbfa")) {
+  if ((m_analysisType == "vbf") || (m_analysisType == "vbfa") || (m_analysisType == "1lep")) {
     delete m_tree;
     m_tree = nullptr;
     m_tree_vbf = new MVATree_VBFHbb(writeMVATree, readMVA, m_analysisType, wk(),
