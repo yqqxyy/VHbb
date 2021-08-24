@@ -1,4 +1,4 @@
-#include "CxAODReader_VBFHbb/MVATree_VBFHbb.h"
+#include "CxAODReader_VHbb/MVATree_VBFHbb.h"
 #include "EventLoop/Worker.h"
 
 MVATree_VBFHbb::MVATree_VBFHbb(bool persistent, bool readMVA, std::string analysisType, EL::Worker* wk, std::vector<std::string> variations, bool nominalOnly) 
