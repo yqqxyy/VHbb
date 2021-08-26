@@ -117,7 +117,7 @@ EL::StatusCode AnalysisReader_VHQQ1Lep::initializeTools() {
 
   // default full run 2 MVA (ICHEP style training settings, full truth tagging,
   // ptV>150 GeV inclusive training)
-  m_mvaVHbbFullRun2oldDefault = new MVAApplication_TMVA(
+  /*m_mvaVHbbFullRun2oldDefault = new MVAApplication_TMVA(
       m_analysisType, MVAType::ichepStyleIncl1LepMedium, "mvaOldDefault");
   m_mvaVHbbFullRun2oldDefault->Initialise(
       "$WorkDir_DIR/data/CxAODReader_VHbb/BDT_fullTruthTag_ICHEPstyle/",
@@ -154,7 +154,7 @@ EL::StatusCode AnalysisReader_VHQQ1Lep::initializeTools() {
         m_analysisType, MVAType::ichepStyleIncl1LepMedium, "mvaPCBT");
     m_mvaVHbbFullRun2PCBT->Initialise(
         "$WorkDir_DIR/data/CxAODReader_VHbb/BDT_fullTruthTag_PCBT_SRCR/",
-        m_tree);
+        m_tree);*/
     // m_mvaVHbbApps["mvaPCBT"] = m_mvaVHbbFullRun2PCBT; // include this line if
     // you want mva with MV2c10 in input variables and old hyperparameter
     // settings
