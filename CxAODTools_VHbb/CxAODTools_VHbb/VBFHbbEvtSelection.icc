@@ -146,7 +146,7 @@ bool VBFHbbEvtSelection<T>::passJetPreSelection(const xAOD::JetContainer* jets) 
         nfwdjets++;
         m_result.forwardJets.push_back(jet);
       }
-      if (Props::isVBFSignalJet.get(jet))
+      //if (Props::isVBFSignalJet.get(jet))
         nsignaljets++;
     //}
   }
