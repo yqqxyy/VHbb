@@ -138,7 +138,7 @@ bool VBFHbbEvtSelection<T>::passJetPreSelection(const xAOD::JetContainer* jets) 
     const xAOD::Jet * jet = jets->at(iJet);
     if (!Props::goodJet.get(jet)) continue; //Loop only on good jets
     if (!Props::passOR.get(jet)) continue; 
-    if (Props::isVBFJet.get(jet)) { // applied to keep CxAOD jets already
+    //if (Props::isVBFJet.get(jet)) { // applied to keep CxAOD jets already
       //std::cout << "jetOLOL\tpt " << jet->pt()*0.001 << ", eta " << jet->eta() << ", phi " << jet->phi() << "\n";
       m_result.jets.push_back(jet);
       njets_50++;
@@ -148,7 +148,7 @@ bool VBFHbbEvtSelection<T>::passJetPreSelection(const xAOD::JetContainer* jets) 
       }
       if (Props::isVBFSignalJet.get(jet))
         nsignaljets++;
-    }
+    //}
   }
   // Jets appear to be pt ordered but just in case
   std::sort(m_result.jets.begin(), m_result.jets.end(), sort_pt);
