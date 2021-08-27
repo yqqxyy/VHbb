@@ -355,18 +355,18 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_trigger_info(){
   // trigger decisions
   m_tree_vbf->pass_L1_2J25 = Props::pass_L1_2J25.get(m_eventInfo);
   m_tree_vbf->pass_L1_J25_0ETA23 = Props::pass_L1_J25_0ETA23.get(m_eventInfo);
-  m_tree_vbf->pass_L1_HT150_JJ15_ETA49 = Props::pass_L1_HT150_JJ15_ETA49.get(m_eventInfo);
+  //m_tree_vbf->pass_L1_HT150_JJ15_ETA49 = Props::pass_L1_HT150_JJ15_ETA49.get(m_eventInfo);
   m_tree_vbf->pass_L1_2J15_31ETA49 = Props::pass_L1_2J15_31ETA49.get(m_eventInfo);
-  m_tree_vbf->pass_L1_HT150_J20s5_ETA31 = Props::pass_L1_HT150_J20s5_ETA31.get(m_eventInfo);
+  //m_tree_vbf->pass_L1_HT150_J20s5_ETA31 = Props::pass_L1_HT150_J20s5_ETA31.get(m_eventInfo);
   m_tree_vbf->pass_L1_MJJ_400 = Props::pass_L1_MJJ_400.get(m_eventInfo);
   m_tree_vbf->pass_L1_J40_0ETA25 = Props::pass_L1_J40_0ETA25.get(m_eventInfo);
   m_tree_vbf->pass_L1_MJJ_400_CF = Props::pass_L1_MJJ_400_CF.get(m_eventInfo);
   m_tree_vbf->pass_L1_J20_31ETA49 = Props::pass_L1_J20_31ETA49.get(m_eventInfo);
   m_tree_vbf->pass_L1_J40_0ETA25_2J25_J20_31ETA49 = Props::pass_L1_J40_0ETA25_2J25_J20_31ETA49.get(m_eventInfo);
   m_tree_vbf->pass_L1_J25_0ETA23_2J15_31ETA49 = Props::pass_L1_J25_0ETA23_2J15_31ETA49.get(m_eventInfo);
-  m_tree_vbf->pass_L1_HT150_J20s5_ETA31_MJJ_400_CF = Props::pass_L1_HT150_J20s5_ETA31_MJJ_400_CF.get(m_eventInfo);
+  //m_tree_vbf->pass_L1_HT150_J20s5_ETA31_MJJ_400_CF = Props::pass_L1_HT150_J20s5_ETA31_MJJ_400_CF.get(m_eventInfo);
   m_tree_vbf->pass_L1_J40_0ETA25_2J15_31ETA49 = Props::pass_L1_J40_0ETA25_2J15_31ETA49.get(m_eventInfo);
-  m_tree_vbf->pass_L1_HT150_JJ15_ETA49_MJJ_400 = Props::pass_L1_HT150_JJ15_ETA49_MJJ_400.get(m_eventInfo);
+  //m_tree_vbf->pass_L1_HT150_JJ15_ETA49_MJJ_400 = Props::pass_L1_HT150_JJ15_ETA49_MJJ_400.get(m_eventInfo);
   m_tree_vbf->pass_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490 = Props::pass_HLT_j55_gsc80_bmv2c1070_split_j45_gsc60_bmv2c1085_split_j45_320eta490.get(m_eventInfo);
   m_tree_vbf->pass_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49 = Props::pass_HLT_j35_gsc55_bmv2c1070_split_2j45_320eta490_L1J25_0ETA23_2J15_31ETA49.get(m_eventInfo);
   m_tree_vbf->pass_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split = Props::pass_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split.get(m_eventInfo);
