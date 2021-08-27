@@ -353,7 +353,7 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_trigger_info(){
   // ------------------------
 
   // trigger decisions
-  m_tree_vbf->pass_L1_2J25 = Props::pass_L1_2J25.get(m_eventInfo);
+  //m_tree_vbf->pass_L1_2J25 = Props::pass_L1_2J25.get(m_eventInfo);
   m_tree_vbf->pass_L1_J25_0ETA23 = Props::pass_L1_J25_0ETA23.get(m_eventInfo);
   //m_tree_vbf->pass_L1_HT150_JJ15_ETA49 = Props::pass_L1_HT150_JJ15_ETA49.get(m_eventInfo);
   m_tree_vbf->pass_L1_2J15_31ETA49 = Props::pass_L1_2J15_31ETA49.get(m_eventInfo);
