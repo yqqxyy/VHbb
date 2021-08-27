@@ -308,7 +308,7 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_meta_info( std::vector<const xAOD::
     m_tree_vbf->EventWeight = m_weight *weights_jet0.at(0) * weights_jet1.at(0) *weights_leadBEta.at(0);
     m_tree_vbf->BJetTriggerWeight = weights_jet0.at(0) * weights_jet1.at(0) *weights_leadBEta.at(0);
   }
-  m_tree_vbf->npv = Props::npv.get(m_eventInfo);
+  //m_tree_vbf->npv = Props::npv.get(m_eventInfo);
 
   if (!m_isMC) return StatusCode::SUCCESS;
   
