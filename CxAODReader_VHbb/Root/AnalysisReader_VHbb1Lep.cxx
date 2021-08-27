@@ -159,8 +159,8 @@ EL::StatusCode AnalysisReader_VHbb1Lep::fill_VBF (){
 
   // apply qg tagging weights 
   // TO BE REMOVED ? 
-  m_weight *= (vbfJets.at(0))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(0));
-  m_weight *= (vbfJets.at(1))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(1));
+  m_weight *= 1;//(vbfJets.at(0))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(0));
+  m_weight *= 1;//(vbfJets.at(1))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(1));
 
   m_histNameSvc->set_analysisType(HistNameSvc::AnalysisType::VBF); // use VBF naming convention
   m_histNameSvc->set_nTag(2); // set histogram name
@@ -605,8 +605,8 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_jet_info(
   m_tree_vbf-> QGTaggerJ1 = Props::QGTagger.get(vbfJets.at(0));
   m_tree_vbf-> QGTaggerJ2 = Props::QGTagger.get(vbfJets.at(1));
 
-  m_tree_vbf-> QGTaggerWeightJ1 = (vbfJets.at(0))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(0));
-  m_tree_vbf-> QGTaggerWeightJ2 = (vbfJets.at(1))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(1));
+  //m_tree_vbf-> QGTaggerWeightJ1 = (vbfJets.at(0))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(0));
+  //m_tree_vbf-> QGTaggerWeightJ2 = (vbfJets.at(1))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(1));
 
 
   // ===== pT_ballance
