@@ -69,7 +69,7 @@ bool VBFHbb4centralEvtSelection::passJetSelection(const xAOD::JetContainer* jets
 bool VBFHbb4centralEvtSelection::passTriggerSelection(const xAOD::EventInfo* evtinfo){
   m_cutFlow.count("AllEvents");
 
-  bool passesL1  = true//Props::pass_L1_HT150_J20s5_ETA31_MJJ_400_CF.get( evtinfo ) > 0;
+  bool passesL1  = true;//Props::pass_L1_HT150_J20s5_ETA31_MJJ_400_CF.get( evtinfo ) > 0;
   bool passesHLT = Props::pass_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split.get( evtinfo ) > 0; 
 
   if (passesL1) Info("passJetSelection ()", "pass L1");
