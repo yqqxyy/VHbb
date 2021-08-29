@@ -602,8 +602,8 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_jet_info(
   m_tree_vbf-> NTrk500PVJ1 = Props::NumTrkPt500PV.get(vbfJets.at(0));
   m_tree_vbf-> NTrk500PVJ2 = Props::NumTrkPt500PV.get(vbfJets.at(1));
 
-  m_tree_vbf-> QGTaggerJ1 = Props::QGTagger.get(vbfJets.at(0));
-  m_tree_vbf-> QGTaggerJ2 = Props::QGTagger.get(vbfJets.at(1));
+  //m_tree_vbf-> QGTaggerJ1 = Props::QGTagger.get(vbfJets.at(0));
+  //m_tree_vbf-> QGTaggerJ2 = Props::QGTagger.get(vbfJets.at(1));
 
   //m_tree_vbf-> QGTaggerWeightJ1 = (vbfJets.at(0))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(0));
   //m_tree_vbf-> QGTaggerWeightJ2 = (vbfJets.at(1))->auxdata<float>("qgTaggerWeight");//Props::QGTaggerWeight.get(vbfJets.at(1));
