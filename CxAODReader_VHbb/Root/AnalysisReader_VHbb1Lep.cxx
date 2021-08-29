@@ -479,8 +479,8 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_jet_info(
   }
 
   
-  m_tree_vbf->J1FJVTLoose = Props::PassFJvtLoose.get( vbfJets.at(0) );
-  m_tree_vbf->J2FJVTLoose = Props::PassFJvtLoose.get( vbfJets.at(1) );
+  //m_tree_vbf->J1FJVTLoose = Props::PassFJvtLoose.get( vbfJets.at(0) );
+  //m_tree_vbf->J2FJVTLoose = Props::PassFJvtLoose.get( vbfJets.at(1) );
   m_tree_vbf->J1FJVTTight = Props::PassFJvtTight.get( vbfJets.at(0) );
   m_tree_vbf->J2FJVTTight = Props::PassFJvtTight.get( vbfJets.at(1) );
 
