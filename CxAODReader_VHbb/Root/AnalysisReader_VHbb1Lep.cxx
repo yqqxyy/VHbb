@@ -354,7 +354,7 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_trigger_info(){
 
   // trigger decisions
   //m_tree_vbf->pass_L1_2J25 = Props::pass_L1_2J25.get(m_eventInfo);
-  m_tree_vbf->pass_L1_J25_0ETA23 = Props::pass_L1_J25_0ETA23.get(m_eventInfo);
+  //m_tree_vbf->pass_L1_J25_0ETA23 = Props::pass_L1_J25_0ETA23.get(m_eventInfo);
   //m_tree_vbf->pass_L1_HT150_JJ15_ETA49 = Props::pass_L1_HT150_JJ15_ETA49.get(m_eventInfo);
   m_tree_vbf->pass_L1_2J15_31ETA49 = Props::pass_L1_2J15_31ETA49.get(m_eventInfo);
   //m_tree_vbf->pass_L1_HT150_J20s5_ETA31 = Props::pass_L1_HT150_J20s5_ETA31.get(m_eventInfo);
@@ -363,7 +363,7 @@ EL::StatusCode AnalysisReader_VHbb1Lep::save_trigger_info(){
   m_tree_vbf->pass_L1_MJJ_400_CF = Props::pass_L1_MJJ_400_CF.get(m_eventInfo);
   m_tree_vbf->pass_L1_J20_31ETA49 = Props::pass_L1_J20_31ETA49.get(m_eventInfo);
   m_tree_vbf->pass_L1_J40_0ETA25_2J25_J20_31ETA49 = Props::pass_L1_J40_0ETA25_2J25_J20_31ETA49.get(m_eventInfo);
-  m_tree_vbf->pass_L1_J25_0ETA23_2J15_31ETA49 = Props::pass_L1_J25_0ETA23_2J15_31ETA49.get(m_eventInfo);
+  //m_tree_vbf->pass_L1_J25_0ETA23_2J15_31ETA49 = Props::pass_L1_J25_0ETA23_2J15_31ETA49.get(m_eventInfo);
   //m_tree_vbf->pass_L1_HT150_J20s5_ETA31_MJJ_400_CF = Props::pass_L1_HT150_J20s5_ETA31_MJJ_400_CF.get(m_eventInfo);
   m_tree_vbf->pass_L1_J40_0ETA25_2J15_31ETA49 = Props::pass_L1_J40_0ETA25_2J15_31ETA49.get(m_eventInfo);
   //m_tree_vbf->pass_L1_HT150_JJ15_ETA49_MJJ_400 = Props::pass_L1_HT150_JJ15_ETA49_MJJ_400.get(m_eventInfo);
