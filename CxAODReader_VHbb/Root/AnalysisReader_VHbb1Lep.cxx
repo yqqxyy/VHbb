@@ -171,7 +171,7 @@ EL::StatusCode AnalysisReader_VHbb1Lep::fill_VBF (){
   // ====================
 
   EL_CHECK("AnalysisReader_VBFHbb::save_meta_info" , save_meta_info(jets, signalJets) );
-  EL_CHECK("AnalysisReader_VBFHbb::save_trigger_info" , save_trigger_info() );
+  //EL_CHECK("AnalysisReader_VBFHbb::save_trigger_info" , save_trigger_info() );
 
   // ====================
   // fill jet variables
