@@ -72,12 +72,12 @@ bool VBFHbb4centralEvtSelection::passTriggerSelection(const xAOD::EventInfo* evt
   bool passesL1  = true;//Props::pass_L1_HT150_J20s5_ETA31_MJJ_400_CF.get( evtinfo ) > 0;
   bool passesHLT = true;//Props::pass_HLT_ht300_2j40_0eta490_invm700_L1HT150_J20s5_ETA31_MJJ_400_CF_AND_2j25_gsc45_bmv2c1070_split.get( evtinfo ) > 0; 
 
-  if (passesL1) Info("passJetSelection ()", "pass L1");
-  else return false;
+  //if (passesL1) Info("passJetSelection ()", "pass L1");
+  //else return false;
   m_cutFlow.count("L1_HT150-J20s5.ETA31_MJJ-400-CF");
   
-  if (passesHLT) Info("passJetSelection ()", "pass HLT");
-  else return false;
+  //if (passesHLT) Info("passJetSelection ()", "pass HLT");
+  //else return false;
   m_cutFlow.count("HLT_ht300_2j40_0eta490_invm700_L1HT150-J20s5.ETA31_MJJ-400-CF_AND_2j25_gsc45_bmv2c1070_split");
 
   return true;
