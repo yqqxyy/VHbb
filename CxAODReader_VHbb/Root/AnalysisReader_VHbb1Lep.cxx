@@ -119,7 +119,7 @@ EL::StatusCode AnalysisReader_VHbb1Lep::fill_VBF (){
   std::vector<const xAOD::Jet*> vbfJets    = m_jetAssigner->vbfJets();
 
   if(!m_doTruthTagging) compute_btagging();
- 
+  int a=1;
 
   // ===============
   TLorentzVector b1Vec(signalJets.at(0)->p4()), b2Vec(signalJets.at(1)->p4()),
